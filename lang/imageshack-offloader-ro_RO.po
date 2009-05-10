@@ -1,0 +1,109 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: Imageshack Offloader\n"
+"Report-Msgid-Bugs-To: http://wordpress.org/tag/imageshack-offloader\n"
+"POT-Creation-Date: 2009-05-07 17:55+0300\n"
+"PO-Revision-Date: \n"
+"Last-Translator: scribu <scribu@gmail.com>\n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR scribu
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+#
+#: admin.php:23
+msgid "full"
+msgstr "întreagă"
+
+#: admin.php:24
+msgid "large"
+msgstr "mare"
+
+#: admin.php:25
+msgid "medium"
+msgstr "medie"
+
+#: admin.php:26
+msgid "thumbnail"
+msgstr "miniatură"
+
+#: admin.php:65
+msgid "Upload images with these sizes:"
+msgstr "Încarcă imagini cu următoarele mărimi:"
+
+#: admin.php:76
+msgid "Image sizes"
+msgstr "Mărimea imaginilor"
+
+#: admin.php:80
+msgid "Unattached images"
+msgstr "Imagini neatașate"
+
+#: admin.php:83
+msgid "Also upload unattached images."
+msgstr "Încarcă și imaginile neatașate."
+
+#: admin.php:91
+msgid "newest first"
+msgstr "întâi cele mai noi"
+
+#: admin.php:98
+msgid "random"
+msgstr "aleatoare"
+
+#: admin.php:105
+msgid "oldest first"
+msgstr "întâi cele mai vechi"
+
+#: admin.php:107
+msgid "Upload order"
+msgstr "Ordinea de încărcare"
+
+#: admin.php:111
+msgid "Upload interval"
+msgstr "Interval de încărcare"
+
+#: admin.php:116
+msgid "Try to upload an image every %input% seconds."
+msgstr "Încearcă să încarci o imagine o dată la fiecare %input% secunde."
+
+#: admin.php:121
+msgid "Registration code"
+msgstr "Codul de înregistrare"
+
+#: admin.php:124
+msgid "Paste the registration code found on <a target=\"_blank\" href=\"http://profile.imageshack.us/registration/\">this page</a> on Imageshack, after logging in."
+msgstr "Copiază codul de înregistrare găsit la <a target=\"_blank\" href=\"http://profile.imageshack.us/registration/\">această pagină</a> de pe Imageshack, după ce te loghezi."
+
+#: scb/OptionsPage.php:163
+msgid "Settings <strong>saved</strong>."
+msgstr "Setări <strong>salvate</strong>."
+
+#: scb/OptionsPage.php:192
+msgid "Settings"
+msgstr "Setări"
+
+#. Plugin Name of an extension
+msgid "ImageShack Offloader"
+msgstr "ImageShack Offloader"
+
+#. Plugin URI of an extension
+msgid "http://scribu.net/wordpress/imageshack-offloader"
+msgstr "http://scribu.net/wordpress/imageshack-offloader"
+
+#. Description of an extension
+msgid "Offload your images to <a href=\"http://imageshack.us\">ImageShack</a> to save server resources."
+msgstr "Trimite imaginile la  <a href=\"http://imageshack.us\">ImageShack</a> pentru a face economie la resursele serverului."
+
+#. Author of an extension
+msgid "scribu"
+msgstr "scribu"
+
+#. Author URI of an extension
+msgid "http://scribu.net/"
+msgstr "http://scribu.net/"
+
