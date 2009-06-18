@@ -5,27 +5,24 @@ class imageShackOffloaderAdmin extends scbAdminPage
 	function setup()
 	{
 		// Load translations
-		$this->textdomain = 'imageshack-offloader';
 		$plugin_dir = basename(dirname($file));
-		load_plugin_textdomain($this->textdomain, "wp-content/plugins/$plugin_dir/lang", "$plugin_dir/lang");
+		load_plugin_textdomain('imageshack-offloader', "wp-content/plugins/$plugin_dir/lang", "$plugin_dir/lang");
 
 		$this->args = array(
 			'page_title' => 'ImageShack Offloader',
 		);
-
-		add_action('wp_dashboard_setup', array($this, 'add_box'));
 	}
 
-	function get_sizes()
+	static function get_sizes()
 	{
 		$sizes = array(
-			'full' => __('full', $this->textdomain),
-			'large' => __('large', $this->textdomain),
-			'medium' => __('medium', $this->textdomain),
-			'thumbnail' => __('thumbnail', $this->textdomain),
+			'full' => __('full', 'imageshack-offloader'),
+			'large' => __('large', 'imageshack-offloader'),
+			'medium' => __('medium', 'imageshack-offloader'),
+			'thumbnail' => __('thumbnail', 'imageshack-offloader'),
 		);
 
-		return apply_filters('imageshack_offloader_sizes', $sizes, $this->textdomain);
+		return apply_filters('imageshack_offloader_sizes', $sizes, 'imageshack-offloader');
 	}
 
 	function validate($new_options)
@@ -45,7 +42,7 @@ class imageShackOffloaderAdmin extends scbAdminPage
 	function page_content()
 	{
 		// Sizes
-		$content =  "<p>" . __('Upload images with these sizes:', $this->textdomain) . "</p>\n";
+		$content =  "<p>" . __('Upload images with these sizes:', 'imageshack-offloader') . "</p>\n";
 		foreach ( $this->get_sizes() as $size => $l10n)
 		{
 			$checked = @in_array($size, $this->options->sizes) ? " checked='checked'" : '';
@@ -57,21 +54,21 @@ class imageShackOffloaderAdmin extends scbAdminPage
 				'extra' => $checked
 			));
 		}
-		$rows[] = $this->row_wrap(__('Image sizes', $this->textdomain), $content);
+		$rows[] = $this->row_wrap(__('Image sizes', 'imageshack-offloader'), $content);
 
 		// Unattached
 		$rows[] = $this->table_row(array(
-			'title' => __('Unattached images', $this->textdomain),
+			'title' => __('Unattached images', 'imageshack-offloader'),
 			'type' => 'checkbox',
 			'name' => 'unattached',
-			'desc' => __('Also upload unattached images.', $this->textdomain)
+			'desc' => __('Also upload unattached images.', 'imageshack-offloader')
 		));
 
 		// Order
 		$orders = array(
-			'newest' => __('newest first', $this->textdomain),
-			'random' => __('random', $this->textdomain),
-			'oldest' => __('oldest first', $this->textdomain),
+			'newest' => __('newest first', 'imageshack-offloader'),
+			'random' => __('random', 'imageshack-offloader'),
+			'oldest' => __('oldest first', 'imageshack-offloader'),
 		);
 
 		$content = '';
@@ -82,38 +79,44 @@ class imageShackOffloaderAdmin extends scbAdminPage
 				'value' => $val,
 				'desc' => "<p>%input% $desc</p>\n",
 			));
-		$rows[] = $this->row_wrap(__('Offload priority', $this->textdomain), $content);
+		$rows[] = $this->row_wrap(__('Offload priority', 'imageshack-offloader'), $content);
 
 		// Interval
 		$rows[] = $this->table_row(array(
-			'title' => __('Offload interval', $this->textdomain),
+			'title' => __('Offload interval', 'imageshack-offloader'),
 			'type' => 'text',
 			'name' => 'interval',
 			'extra' => "class='small-text'",
-			'desc' => __('Try to offload an image every %input% seconds. <br>If you set it to 0, images will be offloaded faster, but your site will be slower.', $this->textdomain)
+			'desc' => __('Try to offload an image every %input% seconds. <br>If you set it to 0, images will be offloaded faster, but your site will be slower.', 'imageshack-offloader')
 		));
 
 		// Login
 		$rows[] = $this->table_row(array(
-			'title' => __('Registration code', $this->textdomain),
+			'title' => __('Registration code', 'imageshack-offloader'),
 			'type' => 'text',
 			'name' => 'login',
-			'desc' => '<br/>' . __('To put offloaded images into an account, paste the registration code found on <a target="_blank" href="http://profile.imageshack.us/registration/">this page</a> on Imageshack, after logging in.', $this->textdomain),
+			'desc' => '<br/>' . __('To put offloaded images into an account, paste the registration code found on <a target="_blank" href="http://profile.imageshack.us/registration/">this page</a> on Imageshack, after logging in.', 'imageshack-offloader'),
 			'extra' => "class='regular-text'", 
 		));
 
 		echo $this->form_table_wrap(implode('', $rows));
 	}
+}
 
-	//_________________________Box stuff_________________________
-
-	function add_box()
+abstract class imageShackStats
+{
+	static function init()
+	{
+		add_action('wp_dashboard_setup', array(__CLASS__, 'add_box'));
+	}
+	
+	static function add_box()
 	{
 		if ( current_user_can('manage_options') )
-			wp_add_dashboard_widget('offloaderdiv', 'Offloading status', array($this, 'stats'));
+			wp_add_dashboard_widget('offloaderdiv', 'Offloading status', array(__CLASS__, 'stats'));
 	}
 
-	function stats()
+	static function stats()
 	{
 		global $wpdb;
 
@@ -136,7 +139,7 @@ class imageShackOffloaderAdmin extends scbAdminPage
 			return;
 		}
 
-		$sizes = $this->get_sizes();
+		$sizes = imageShackOffloaderAdmin::get_sizes();
 
 		foreach ( $data as $row )
 		{

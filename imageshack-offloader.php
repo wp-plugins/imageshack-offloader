@@ -63,6 +63,7 @@ abstract class imageShackCore
 		{
 			require_once dirname(__FILE__) . '/admin.php';
 			new imageShackOffloaderAdmin(__FILE__, self::$options);
+			imageShackStats::init();
 		}
 	}
 
