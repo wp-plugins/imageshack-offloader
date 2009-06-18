@@ -154,10 +154,12 @@ class imageShackOffloaderAdmin extends scbAdminPage
 		}
 
 		$sizes = $this->get_sizes();
+
 		foreach ( $data as $row )
 		{
-			$name = ucfirst($sizes[str_replace('_imageshack_', '', $row->size)]);
-			$count = $row->count ? 0 : round($row->count * 100 / $total, 2);
+			$size = str_replace('_imageshack_', '', $row->size);
+			$name = ucfirst($sizes[$size]);
+			$count = $row->count ? round($row->count * 100 / $total, 2) : 0;
 
 			echo "<p><strong>$name</strong>: $count% ($row->count)</p>\n";
 		}

@@ -94,8 +94,8 @@ abstract class imageShackOffloader
 		self::$options = $options;
 
 // DEBUG
-if ( is_admin() )
-	self::offload();
+#if ( is_admin() )
+#	self::offload();
 	}
 
 	static function offload()
@@ -195,13 +195,6 @@ if ( is_admin() )
 
 	private static function uploadToImageshack($url, $args)
 	{
-return;
-echo "<pre>";
-var_dump($url);
-print_r($args);
-echo "</pre>";	
-die;
-
 		$response = wp_remote_post($url, array('body' => $args));
 
 		return wp_remote_retrieve_body($response);
