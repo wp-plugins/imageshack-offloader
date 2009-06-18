@@ -4,7 +4,7 @@ Donate link: http://scribu.net/wordpress
 Tags: cdn, images, imageshack
 Requires at least: 2.7
 Tested up to: 2.8
-Stable tag: 0.9b
+Stable tag: trunk
 
 Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 

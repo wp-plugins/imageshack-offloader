@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: ImageShack Offloader
-Version: 1.0b
+Version: 1.0
 Description: Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 Author: scribu
 Author URI: http://scribu.net/
@@ -24,9 +24,6 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-require_once dirname(__FILE__) . '/scb-check.php';
-if ( ! scb_check(__FILE__) ) return;
-
 imageShackCore::init();
 
 abstract class imageShackCore 
@@ -35,6 +32,8 @@ abstract class imageShackCore
 
 	static function init()
 	{
+		require_once dirname(__FILE__) . '/scb/load.php';
+
 		// Load options
 		self::$options = new scbOptions('imageshack-offloader', __FILE__, array(
 			'sizes' => array('full', 'large', 'medium', 'thumbnail'),
