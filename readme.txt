@@ -4,7 +4,7 @@ Donate link: http://scribu.net/wordpress
 Tags: cdn, images, imageshack
 Requires at least: 2.7
 Tested up to: 2.8
-Stable tag: trunk
+Stable tag: 0.9b
 
 Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 
@@ -22,10 +22,7 @@ Instead of uploading each image manually and modifying each post, you can just i
 * You can use the default WP interface for uploading images.
 * You have a backup of your images on your server.
 
-**Requirements:**
-
-* PHP5
-* cURL
+**PHP5 is required**
 
 == Installation ==
 

@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: ImageShack Offloader
-Version: 0.9b
+Version: 1.0a
 Description: Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 Author: scribu
 Author URI: http://scribu.net/
@@ -24,48 +24,54 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+require_once dirname(__FILE__) . '/scb-check.php';
+if ( ! scb_check(__FILE__) ) return;
+
 imageShackCore::init();
 
-class imageShackCore {
+abstract class imageShackCore 
+{
 	static $options;
 
-	static function init() {
+	static function init()
+	{
 		if ( self::$options != null )
 			return;
-
-		// Load scbFramework
-		require_once(dirname(__FILE__) . '/scb/load.php');
 
 		// Load options
 		self::$options = new scbOptions('imageshack-offloader', __FILE__, array(
 			'sizes' => array('full', 'large', 'medium', 'thumbnail'),
 			'order' => 'newest',
+			'use_transload' => true,
 			'interval' => 120,
 			'login' => '',
 			'unattached' => true
 		));
 
-		$offloader = new imageShackOffloader(self::$options);
-		$display = new imageShackDisplay;
+		imageShackOffloader::init(self::$options);
+		imageShackDisplay::init();
 
 		// Set up cron
 		$cron = new scbCron(__FILE__, array(
-			'callback' => array($offloader, 'offload'),
+			'callback' => array('imageShackOffloader', 'offload'),
 			'interval' => self::$options->interval,
 		));
 
 		// Load settings page
-		if ( is_admin() ) {
-			require_once(dirname(__FILE__) . '/admin.php');
+		if ( is_admin() )
+		{
+			require_once dirname(__FILE__) . '/admin.php';
 			new imageShackOffloaderAdmin(__FILE__, self::$options, $cron);
 		}
 	}
 
-	static function get_meta_key($size) {
+	static function get_meta_key($size)
+	{
 		return '_imageshack_' . $size;
 	}
 
-	static function get_where_clause() {
+	static function get_where_clause()
+	{
 		$where = "
 			WHERE post_type = 'attachment'
 			AND post_mime_type LIKE 'image/%'
@@ -78,46 +84,53 @@ class imageShackCore {
 	}
 }
 
-class imageShackOffloader {
-	private $options;
+abstract class imageShackOffloader 
+{
+	static $udir;
+	static $options;
 
-	function __construct($options) {
-		$this->options = $options;
+	static function init($options)
+	{
+		self::$options = $options;
 
-#if ( is_admin() )
-#$this->offload();
+// DEBUG
+if ( is_admin() )
+	self::offload();
 	}
 
-	function offload() {
-		$this->udir = wp_upload_dir();
+	static function offload()
+	{
+		self::$udir = wp_upload_dir();
 
-		$this->tmp_sizes = $this->options->sizes;
-		shuffle($this->tmp_sizes);
-
-		$this->_offload();
-	}
-
-	private function _offload() {
-		global $wpdb;
-
-		if ( empty($this->tmp_sizes) )
-			return;
-
-		echo $size = array_pop($this->tmp_sizes);
-		$meta_key = imageShackCore::get_meta_key($size);
 		$where = imageShackCore::get_where_clause();
 
-		switch ($this->options->order) {
+		switch (self::$options->order)
+		{
 			case 'newest' :
-				$orderby = 'ORDER BY post_date DESC';
-				break;
+				$orderby = 'ORDER BY post_date DESC'; break;
 			case 'random' :
-				$orderby = 'ORDER BY RAND()';
-				break;
+				$orderby = 'ORDER BY RAND()'; break;
 			case 'oldest' :
-				$orderby = 'ORDER BY post_date ASC';
-				break;
+				$orderby = 'ORDER BY post_date ASC'; break;
 		}
+
+		$tmp_sizes = self::$options->sizes;
+
+		shuffle($tmp_sizes);
+
+		do {
+			$size = array_pop($tmp_sizes);
+
+			if ( self::_offload($size, $where, $orderby) )
+				return;
+		} while ( ! empty($tmp_sizes) );
+	}
+
+	private static function _offload($size, $where, $orderby)
+	{
+		global $wpdb;
+
+		$meta_key = imageShackCore::get_meta_key($size);
 
 		$ids = $wpdb->get_col("
 			SELECT ID
@@ -133,50 +146,45 @@ class imageShackOffloader {
 		");
 
 		if ( empty($ids) )
-			return $this->_offload();	// try with a different size
+			return false;
 
-		foreach ( $ids as $id ) {
-			if ( ! $file = $this->get_file_path($id, $size) )
-				continue;
-
-			if ( ! $url = $this->parse_imageshack_url($file) )
+		foreach ( $ids as $id )
+		{
+			if ( ! $url = self::parse_imageshack_url($id, $size) )
 				continue;
 
 			add_post_meta($id, $meta_key, $url, true);
 
-			return;	// exit after first successful upload to prevent throtling
+			return true;	// exit after first successful upload to prevent throtling
 		}
 	}
 
-	function get_file_path($id, $size) {
-		$meta = wp_get_attachment_metadata($id);
-		$file = get_attached_file($id);
-
-		if ( 'full' == $size )
-			$path = $file;
-		else {
-			$file = str_replace(basename($file), $meta['sizes'][$size]['file'], $file);
-			$path = path_join($this->udir['basedir'], $file);
-		}
-
-		if ( ! file_exists($path) )
-			return false;
-
-		return $path;
-	}
-
-	function parse_imageshack_url($path) {
-		$post = array(
-			'fileupload' => '@'.$path,
+	private static function parse_imageshack_url($id, $size)
+	{
+		$args = array(
 			'xml' => 'yes',
 			'public' => 'no',
 			'rembar' => 'yes',
 		);
 
-		if ( !empty($this->options->login) )
-			$post['cookie'] = trim($this->options->login);
+		if ( !empty(self::$options->login) )
+			$args['cookie'] = trim(self::$options->login);
 
-		if ( ! $r = $this->uploadToImageshack($post) )
+		if ( ! $file = image_get_intermediate_size($id, $size) )
+			return false;
+
+		if ( self::$options->use_transload )
+		{
+			$url = 'http://www.imageshack.us/transload.php';
+			$args['url'] = $file['url'];
+		}
+		else
+		{
+			$url = 'http://www.imageshack.us/index.php';
+			$args['fileupload'] = $file['path'];
+		}
+
+		if ( ! $r = self::uploadToImageshack($url, $args) )
 			return false;
 
 		$r = explode('<image_link>', $r);
@@ -185,43 +193,42 @@ class imageShackOffloader {
 		return $r[0];
 	}
 
-	function uploadToImageshack($post) {
-		$ch = curl_init("http://www.imageshack.us/index.php");
+	private static function uploadToImageshack($url, $args)
+	{
+return;
+echo "<pre>";
+var_dump($url);
+print_r($args);
+echo "</pre>";	
+die;
 
-		curl_setopt($ch, CURLOPT_POST, true);
-		curl_setopt($ch, CURLOPT_HEADER, false);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-		curl_setopt($ch, CURLOPT_TIMEOUT, 240);
-		curl_setopt($ch, CURLOPT_POSTFIELDS, $post);
-		curl_setopt($ch, CURLOPT_HTTPHEADER, array('Expect: '));
+		$response = wp_remote_post($url, array('body' => $args));
 
-		$result = curl_exec($ch);
-
-		if ( $err = curl_error($ch) )
-			trigger_error($err, E_USER_WARNING);
-
-		curl_close($ch);
-
-		return $result;
+		return wp_remote_retrieve_body($response);
 	}
 }
 
 
-class imageShackDisplay {
-	function __construct() {
-		add_filter('image_downsize', array($this, 'image_downsize_filter'), 10, 3);
-		add_filter('the_content', array($this, 'the_content_filter'), 20);
+abstract class imageShackDisplay
+{
+	static function init()
+	{
+		add_filter('image_downsize', array(__CLASS__, 'image_downsize_filter'), 10, 3);
+		add_filter('the_content', array(__CLASS__, 'the_content_filter'), 20);
 	}
 
-	function the_content_filter($content) {
-		return preg_replace_callback('/href=["\'](.*?)["\'][^>]*><img [^>]* size-(\w+) wp-image-(\d+)/', array($this, 'preg_callback'), $content);
+	static function the_content_filter($content)
+	{
+		$regex = '/href=["\'](.*?)["\'][^>]*><img [^>]* size-(\w+) wp-image-(\d+)/';
+		return preg_replace_callback($regex, array(__CLASS__, 'preg_callback'), $content);
 	}
 
-	function preg_callback($match) {
+	static function preg_callback($match)
+	{
 		$size = $match[2];
 		$id = $match[3];
 
-		if ( ! $url = $this->get_url($id, $size) )
+		if ( ! $url = self::get_url($id, $size) )
 			return $match[0];
 
 		$old = $match[1];
@@ -235,8 +242,9 @@ class imageShackDisplay {
 		return str_replace($old_url, $new_url, $match[0]);
 	}
 
-	function image_downsize_filter($data, $id, $size) {
-		$url = $this->get_url($id, $size);
+	static function image_downsize_filter($data, $id, $size)
+	{
+		$url = self::get_url($id, $size);
 
 		if ( ! $url )
 			return $data;
@@ -246,12 +254,14 @@ class imageShackDisplay {
 		return $data;
 	}
 
-	static function get_url($id, $size) {
+	static function get_url($id, $size)
+	{
 		return get_post_meta($id, imageShackCore::get_meta_key($size), true);
 	}
 }
 
-function get_imageshack_url($id, $size = 'full') {
+function get_imageshack_url($id, $size = 'full')
+{
 	return imageShackDisplay::get_url($id, $size);
 }
 
