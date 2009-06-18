@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: ImageShack Offloader
-Version: 1.0a
+Version: 1.0b
 Description: Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 Author: scribu
 Author URI: http://scribu.net/
@@ -35,27 +35,28 @@ abstract class imageShackCore
 
 	static function init()
 	{
-		if ( self::$options != null )
-			return;
-
 		// Load options
 		self::$options = new scbOptions('imageshack-offloader', __FILE__, array(
 			'sizes' => array('full', 'large', 'medium', 'thumbnail'),
+			'unattached' => true,
 			'order' => 'newest',
 			'use_transload' => true,
-			'interval' => 120,
+			'interval' => 10,
 			'login' => '',
-			'unattached' => true
 		));
-
-		imageShackOffloader::init(self::$options);
-		imageShackDisplay::init();
 
 		// Set up cron
-		$cron = new scbCron(__FILE__, array(
-			'callback' => array('imageShackOffloader', 'offload'),
-			'interval' => self::$options->interval,
-		));
+		$callback = array('imageShackOffloader', 'offload');
+
+		if ( self::$options->interval > 0 )
+			$cron = new scbCron(__FILE__, array(
+				'callback' => array('imageShackOffloader', 'offload'),
+				'interval' => self::$options->interval,
+			));
+		else
+			call_user_func($callback);
+
+		imageShackDisplay::init();
 
 		// Load settings page
 		if ( is_admin() )
@@ -87,24 +88,14 @@ abstract class imageShackCore
 abstract class imageShackOffloader 
 {
 	static $udir;
-	static $options;
-
-	static function init($options)
-	{
-		self::$options = $options;
-
-// DEBUG
-#if ( is_admin() )
-#	self::offload();
-	}
 
 	static function offload()
 	{
-		self::$udir = wp_upload_dir();
+		self::$udir = wp_upload_dir();	
 
 		$where = imageShackCore::get_where_clause();
 
-		switch (self::$options->order)
+		switch (imageShackCore::$options->order)
 		{
 			case 'newest' :
 				$orderby = 'ORDER BY post_date DESC'; break;
@@ -114,7 +105,7 @@ abstract class imageShackOffloader
 				$orderby = 'ORDER BY post_date ASC'; break;
 		}
 
-		$tmp_sizes = self::$options->sizes;
+		$tmp_sizes = imageShackCore::$options->sizes;
 
 		shuffle($tmp_sizes);
 
@@ -165,24 +156,17 @@ abstract class imageShackOffloader
 			'xml' => 'yes',
 			'public' => 'no',
 			'rembar' => 'yes',
+			'cookie' => trim(imageShackCore::$options->login)
 		);
 
-		if ( !empty(self::$options->login) )
-			$args['cookie'] = trim(self::$options->login);
+		if ( empty($args['cookie']) )
+			unset($args['cookie']);
 
-		if ( ! $file = image_get_intermediate_size($id, $size) )
+		if ( !$file = self::get_file_url($id, $size) )
 			return false;
 
-		if ( self::$options->use_transload )
-		{
-			$url = 'http://www.imageshack.us/transload.php';
-			$args['url'] = $file['url'];
-		}
-		else
-		{
-			$url = 'http://www.imageshack.us/index.php';
-			$args['fileupload'] = $file['path'];
-		}
+		$url = 'http://www.imageshack.us/transload.php';
+		$args['url'] = $file;
 
 		if ( ! $r = self::uploadToImageshack($url, $args) )
 			return false;
@@ -198,6 +182,14 @@ abstract class imageShackOffloader
 		$response = wp_remote_post($url, array('body' => $args));
 
 		return wp_remote_retrieve_body($response);
+	}
+
+	private static function get_file_url($id, $size)
+	{
+		if ( ! $file = image_downsize($id, $size) )
+			return false;
+
+		return $file[0];
 	}
 }
 

@@ -40,9 +40,6 @@ class imageShackOffloaderAdmin extends scbAdminPage
 		// Validate interval
 		$new_options['interval'] = intval($new_options['interval']);
 
-		if ( 0 == $new_options['interval'] )
-			$new_options['interval'] = $this->options->interval;
-
 		if ( $new_options['interval'] != $this->options->interval )
 			$this->cron->reschedule(array('interval' => $new_options['interval']));
 
@@ -89,33 +86,23 @@ class imageShackOffloaderAdmin extends scbAdminPage
 				'value' => $val,
 				'desc' => "<p>%input% $desc</p>\n",
 			));
-		$rows[] = $this->row_wrap(__('Upload order', $this->textdomain), $content);
+		$rows[] = $this->row_wrap(__('Offload priority', $this->textdomain), $content);
 
 		// Interval
 		$rows[] = $this->table_row(array(
-			'title' => __('Upload interval', $this->textdomain),
+			'title' => __('Offload interval', $this->textdomain),
 			'type' => 'text',
 			'name' => 'interval',
 			'extra' => "class='small-text'",
-			'desc' => __('Try to upload an image every %input% seconds.', $this->textdomain)
+			'desc' => __('Try to offload an image every %input% seconds. <br>If you set it to 0, images will be offloaded faster, but your site will be slower.', $this->textdomain)
 		));
-
-		// Use transload
-		$rows[] = $this->table_row(array(
-			'title' => __('Use transloading', $this->textdomain),
-			'type' => 'checkbox',
-			'name' => 'use_transload',
-			'extra' => "class='small-text'",
-			'desc' => __('Uncheck this if you have hotlink protection.', $this->textdomain)
-		));
-		
 
 		// Login
 		$rows[] = $this->table_row(array(
 			'title' => __('Registration code', $this->textdomain),
 			'type' => 'text',
 			'name' => 'login',
-			'desc' => '<br/>' . __('Paste the registration code found on <a target="_blank" href="http://profile.imageshack.us/registration/">this page</a> on Imageshack, after logging in.', $this->textdomain),
+			'desc' => '<br/>' . __('To put offloaded images into an account, paste the registration code found on <a target="_blank" href="http://profile.imageshack.us/registration/">this page</a> on Imageshack, after logging in.', $this->textdomain),
 			'extra' => "class='regular-text'", 
 		));
 
