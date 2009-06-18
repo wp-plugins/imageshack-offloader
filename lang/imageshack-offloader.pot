@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: ImageShack Offloader 0.3a\n"
+"Project-Id-Version: ImageShack Offloader 1.0.1\n"
 "Report-Msgid-Bugs-To: http://wordpress.org/tag/imageshack-offloader\n"
-"POT-Creation-Date: 2009-05-07 17:55+0300\n"
+"POT-Creation-Date: 2009-06-19 02:50+0300\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,78 +16,80 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: admin.php:23
+#: admin.php:22
 msgid "full"
 msgstr ""
 
-#: admin.php:24
+#: admin.php:23
 msgid "large"
 msgstr ""
 
-#: admin.php:25
+#: admin.php:24
 msgid "medium"
 msgstr ""
 
-#: admin.php:26
+#: admin.php:25
 msgid "thumbnail"
 msgstr ""
 
-#: admin.php:65
+#: admin.php:48
 msgid "Upload images with these sizes:"
 msgstr ""
 
-#: admin.php:76
+#: admin.php:60
 msgid "Image sizes"
 msgstr ""
 
-#: admin.php:80
+#: admin.php:64
 msgid "Unattached images"
 msgstr ""
 
-#: admin.php:83
+#: admin.php:67
 msgid "Also upload unattached images."
 msgstr ""
 
-#: admin.php:91
+#: admin.php:72
 msgid "newest first"
 msgstr ""
 
-#: admin.php:98
+#: admin.php:73
 msgid "random"
 msgstr ""
 
-#: admin.php:105
+#: admin.php:74
 msgid "oldest first"
 msgstr ""
 
-#: admin.php:107
-msgid "Upload order"
+#: admin.php:85
+msgid "Offload priority"
 msgstr ""
 
-#: admin.php:111
-msgid "Upload interval"
+#: admin.php:89
+msgid "Offload interval"
 msgstr ""
 
-#: admin.php:116
-msgid "Try to upload an image every %input% seconds."
+#: admin.php:93
+msgid ""
+"Try to offload an image every %input% seconds. <br>If you set it to 0, "
+"images will be offloaded faster, but your site will be slower."
 msgstr ""
 
-#: admin.php:121
+#: admin.php:98
 msgid "Registration code"
 msgstr ""
 
-#: admin.php:124
+#: admin.php:101
 msgid ""
-"Paste the registration code found on <a target=\"_blank\" href=\"http://"
-"profile.imageshack.us/registration/\">this page</a> on Imageshack, after "
-"logging in."
+"To put offloaded images into an account, paste the registration code found "
+"on <a target=\"_blank\" href=\"http://profile.imageshack.us/registration/"
+"\">this page</a> on Imageshack, after logging in."
 msgstr ""
 
-#: scb/OptionsPage.php:163
+#: scb/AdminPage.php:103
 msgid "Settings <strong>saved</strong>."
 msgstr ""
 
-#: scb/OptionsPage.php:192
+#: scb/AdminPage.php:271
 msgid "Settings"
 msgstr ""
 

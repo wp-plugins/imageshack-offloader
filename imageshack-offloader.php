@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: ImageShack Offloader
-Version: 1.0
+Version: 1.0.1
 Description: Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 Author: scribu
 Author URI: http://scribu.net/
@@ -29,6 +29,7 @@ imageShackCore::init();
 abstract class imageShackCore 
 {
 	static $options;
+	static $cron;
 
 	static function init()
 	{
@@ -48,7 +49,7 @@ abstract class imageShackCore
 		$callback = array('imageShackOffloader', 'offload');
 
 		if ( self::$options->interval > 0 )
-			$cron = new scbCron(__FILE__, array(
+			self::$cron = new scbCron(__FILE__, array(
 				'callback' => array('imageShackOffloader', 'offload'),
 				'interval' => self::$options->interval,
 			));
@@ -61,7 +62,7 @@ abstract class imageShackCore
 		if ( is_admin() )
 		{
 			require_once dirname(__FILE__) . '/admin.php';
-			new imageShackOffloaderAdmin(__FILE__, self::$options, $cron);
+			new imageShackOffloaderAdmin(__FILE__, self::$options);
 		}
 	}
 

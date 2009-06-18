@@ -2,22 +2,18 @@
 
 class imageShackOffloaderAdmin extends scbAdminPage 
 {
-	function __construct($file, $options, $cron)
+	function setup()
 	{
 		// Load translations
 		$this->textdomain = 'imageshack-offloader';
 		$plugin_dir = basename(dirname($file));
 		load_plugin_textdomain($this->textdomain, "wp-content/plugins/$plugin_dir/lang", "$plugin_dir/lang");
 
-		$this->cron = $cron;
-
 		$this->args = array(
 			'page_title' => 'ImageShack Offloader',
 		);
 
 		add_action('wp_dashboard_setup', array($this, 'add_box'));
-
-		parent::__construct($file, $options);
 	}
 
 	function get_sizes()
@@ -40,8 +36,8 @@ class imageShackOffloaderAdmin extends scbAdminPage
 		// Validate interval
 		$new_options['interval'] = intval($new_options['interval']);
 
-		if ( $new_options['interval'] != $this->options->interval )
-			$this->cron->reschedule(array('interval' => $new_options['interval']));
+		if ( $new_options['interval'] != $this->options->interval && imageShackCore::$cron != NULL )
+			imageShackCore::$cron->reschedule(array('interval' => $new_options['interval']));
 
 		return $new_options;
 	}
