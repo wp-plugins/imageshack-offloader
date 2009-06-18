@@ -38,9 +38,3 @@ The plugin will automatically filter the post content and replace image src attr
 
 If you want to get the URL for a specific image, you can use `get_imageshack_url($id, $size)`, where $id is the attachment id and $size is the desired size. Default is 'full'. If there is no URL yet, the function will return false.
 
-== Frequently Asked Questions ==
-
-= Why can't multiple images be uploaded at a time? =
-
-Because the ImageShack API doesnt allow it. Furthermore, if you try to upload several images in rapid sequence, you will get an empty reply from the ImageShack server. That is why the default delay is 120 seconds.
-
