@@ -38,3 +38,16 @@ The plugin will automatically filter the post content and replace image src attr
 
 If you want to get the URL for a specific image, you can use `get_imageshack_url($id, $size)`, where $id is the attachment id and $size is the desired size. Default is 'full'. If there is no URL yet, the function will return false.
 
+== Changelog ==
+
+= 1.0.1 =
+* settings page bugfix
+
+= 1.0 =
+* use transloading instead of uploading
+* [more info](http://scribu.net/wordpress/imageshack-offloader/io-1-0.html)
+
+= 0.9 =
+* initial release
+* [more info](http://scribu.net/wordpress/imageshack-offloader/io-0-9.html)
+
