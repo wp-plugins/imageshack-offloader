@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: ImageShack Offloader
-Version: 1.0.1
+Version: 1.0.2
 Description: Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 Author: scribu
 Author URI: http://scribu.net/
@@ -56,8 +56,6 @@ abstract class imageShackCore
 		else
 			call_user_func($callback);
 
-		imageShackDisplay::init();
-
 		// Load settings page
 		if ( is_admin() )
 		{
@@ -65,6 +63,8 @@ abstract class imageShackCore
 			new imageShackOffloaderAdmin(__FILE__, self::$options);
 			imageShackStats::init();
 		}
+		else
+			imageShackDisplay::init();
 	}
 
 	static function get_meta_key($size)
@@ -234,6 +234,14 @@ abstract class imageShackDisplay
 
 		if ( ! $url )
 			return $data;
+
+		if ( false === $data )
+		{
+			// Hack so that we don't have to paste the whole function here
+			remove_filter('image_downsize', array(__CLASS__, 'image_downsize_filter'), 10, 3);
+			$data = image_downsize($id, $size);
+			add_filter('image_downsize', array(__CLASS__, 'image_downsize_filter'), 10, 3);
+		}
 
 		$data[0] = $url;
 

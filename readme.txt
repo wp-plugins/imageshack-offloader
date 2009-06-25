@@ -40,6 +40,9 @@ If you want to get the URL for a specific image, you can use `get_imageshack_url
 
 == Changelog ==
 
+= 1.0.2 =
+* better image replacing
+
 = 1.0.1 =
 * settings page bugfix
 
