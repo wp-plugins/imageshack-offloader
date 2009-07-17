@@ -103,6 +103,7 @@ class imageShackOffloaderAdmin extends scbAdminPage
 	}
 }
 
+
 abstract class imageShackStats
 {
 	static function init()

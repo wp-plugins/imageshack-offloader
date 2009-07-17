@@ -1,12 +1,13 @@
 <?php
 /*
 Plugin Name: ImageShack Offloader
-Version: 1.0.2
+Version: 1.0.3
 Description: Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 Author: scribu
 Author URI: http://scribu.net/
 Plugin URI: http://scribu.net/wordpress/imageshack-offloader
 Text Domain: imageshack-offloader
+Domain Path: /lang
 
 Copyright (C) 2009 scribu.net (scribu AT gmail DOT com)
 
@@ -26,13 +27,17 @@ along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 imageShackCore::init();
 
+
+// Common functions and initialization
 abstract class imageShackCore 
 {
 	static $options;
 	static $cron;
+	const ver = '1.0.3';
 
 	static function init()
 	{
+		// Load scbFramework
 		require_once dirname(__FILE__) . '/scb/load.php';
 
 		// Load options
@@ -65,6 +70,8 @@ abstract class imageShackCore
 		}
 		else
 			imageShackDisplay::init();
+
+		imageShackErrors::init();
 	}
 
 	static function get_meta_key($size)
@@ -86,6 +93,8 @@ abstract class imageShackCore
 	}
 }
 
+
+// Do the offloading
 abstract class imageShackOffloader 
 {
 	static $udir;
@@ -195,6 +204,7 @@ abstract class imageShackOffloader
 }
 
 
+// Replace image URLs on the front-end
 abstract class imageShackDisplay
 {
 	static function init()
@@ -219,7 +229,8 @@ abstract class imageShackDisplay
 
 		$old = $match[1];
 
-		if ( $url == $old )		// should never happen
+		// should never happen
+		if ( $url == $old )
 			return $match[0];
 
 		$old_url = array("src='{$old}'", "src=\"{$old}\"");
@@ -257,5 +268,55 @@ abstract class imageShackDisplay
 function get_imageshack_url($id, $size = 'full')
 {
 	return imageShackDisplay::get_url($id, $size);
+}
+
+
+// Un-offload images that can't be loaded from ImageShack
+abstract class imageShackErrors
+{
+	static function init()
+	{
+		add_action('template_redirect', array(__CLASS__, 'script'));
+		add_action('wp_ajax_imageshack-offloader', array(__CLASS__, 'ajax_response'));
+		add_action('wp_ajax_nopriv_imageshack-offloader', array(__CLASS__, 'ajax_response'));
+	}
+
+	static function script()
+	{
+		wp_enqueue_script('ishack-errors', plugin_dir_url(__FILE__) . 'inc/errors.js', array('jquery'), imageShackCore::ver, true);
+
+		wp_localize_script('ishack-errors', 'iShackL10n', array(
+			'ajax' => admin_url('admin-ajax.php')
+		));
+	}
+
+	static function ajax_response()
+	{
+		global $wpdb;
+
+		$urls = array_unique($_POST['urls']);
+
+		if ( ! $urls )
+			return;
+
+		foreach ( $urls as $i => $url )
+		{
+			// see if the file is actually missing; wp_remote_head() gives "400 Bad Request"
+			if ( FALSE !== @file_get_contents($url) )
+				unset($urls[$i]);
+			else
+				$urls[$i] = "'" . $wpdb->escape($url) . "'";
+		}
+
+		$urls = implode(',', $urls);
+
+		echo (int) $wpdb->query("
+			DELETE FROM {$wpdb->postmeta}
+			WHERE meta_key LIKE '!_imageshack!_%' ESCAPE '!'
+			AND meta_value IN ($urls)
+		");
+
+		die;
+	}
 }
 

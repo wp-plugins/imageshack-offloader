@@ -3,7 +3,7 @@ Contributors: scribu
 Donate link: http://scribu.net/wordpress
 Tags: cdn, images, imageshack
 Requires at least: 2.7
-Tested up to: 2.8
+Tested up to: 2.8.1
 Stable tag: trunk
 
 Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
@@ -16,13 +16,15 @@ Having images in posts is always a good ideea. However, having a lot of images i
 
 Instead of uploading each image manually and modifying each post, you can just install this plugin and be done with it.
 
+If an image can't be loaded from ImageShack, the plugin will roll back to the image on your server.
+
 **Advantages:**
 
 * You don't have to modifiy your posts.
 * You can use the default WP interface for uploading images.
 * You have a backup of your images on your server.
 
-**PHP5 is required**
+**PHP 5 is required.**
 
 == Installation ==
 
@@ -39,6 +41,9 @@ The plugin will automatically filter the post content and replace image src attr
 If you want to get the URL for a specific image, you can use `get_imageshack_url($id, $size)`, where $id is the attachment id and $size is the desired size. Default is 'full'. If there is no URL yet, the function will return false.
 
 == Changelog ==
+
+= 1.0.3 =
+* added roll back mechanism for missing images
 
 = 1.0.2 =
 * better image replacing
