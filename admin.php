@@ -8,9 +8,7 @@ class imageShackOffloaderAdmin extends scbAdminPage
 		$plugin_dir = basename(dirname($file));
 		load_plugin_textdomain('imageshack-offloader', "wp-content/plugins/$plugin_dir/lang", "$plugin_dir/lang");
 
-		$this->args = array(
-			'page_title' => 'ImageShack Offloader',
-		);
+		$this->args = array('page_title' => 'ImageShack Offloader');
 	}
 
 	static function get_sizes()
@@ -56,40 +54,6 @@ class imageShackOffloaderAdmin extends scbAdminPage
 		}
 		$rows[] = $this->row_wrap(__('Image sizes', 'imageshack-offloader'), $content);
 
-		// Unattached
-		$rows[] = $this->table_row(array(
-			'title' => __('Unattached images', 'imageshack-offloader'),
-			'type' => 'checkbox',
-			'name' => 'unattached',
-			'desc' => __('Also upload unattached images.', 'imageshack-offloader')
-		));
-
-		// Order
-		$orders = array(
-			'newest' => __('newest first', 'imageshack-offloader'),
-			'random' => __('random', 'imageshack-offloader'),
-			'oldest' => __('oldest first', 'imageshack-offloader'),
-		);
-
-		$content = '';
-		foreach ( $orders as $val => $desc )
-			$content .= $this->input(array(
-				'type' => 'radio',
-				'name' => 'order',
-				'value' => $val,
-				'desc' => "<p>%input% $desc</p>\n",
-			));
-		$rows[] = $this->row_wrap(__('Offload priority', 'imageshack-offloader'), $content);
-
-		// Interval
-		$rows[] = $this->table_row(array(
-			'title' => __('Offload interval', 'imageshack-offloader'),
-			'type' => 'text',
-			'name' => 'interval',
-			'extra' => "class='small-text'",
-			'desc' => __('Try to offload an image every %input% seconds. <br>If you set it to 0, images will be offloaded faster, but your site will be slower.', 'imageshack-offloader')
-		));
-
 		// Login
 		$rows[] = $this->table_row(array(
 			'title' => __('Registration code', 'imageshack-offloader'),
@@ -121,16 +85,12 @@ abstract class imageShackStats
 	{
 		global $wpdb;
 
-		$total = $wpdb->get_var("
-			SELECT COUNT(*)
-			FROM {$wpdb->posts}
-			" . imageShackCore::get_where_clause()
-		);
+		$total = $wpdb->get_var("SELECT COUNT(*) FROM {$wpdb->posts} " . imageShackCore::where_posts);
 
 		$data = $wpdb->get_results("
 			SELECT meta_key AS size, COUNT(*) as count
 			FROM {$wpdb->postmeta}
-			WHERE meta_key LIKE '!_imageshack!_%' ESCAPE '!'
+			" . imageShackCore::where_key . "
 			GROUP BY meta_key
 		");
 
