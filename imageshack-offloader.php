@@ -25,10 +25,40 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+
+#DEBUG
+scbCron::debug();
+
+function count_schedules($name)
+{
+	$crons = _get_cron_array();
+
+	foreach ( array_keys($crons) as $timestamp )
+		if ( isset($crons[$timestamp][$name]) )
+			$i++;
+
+	debug($i);
+}
+
+function really_clear_scheduled_hook($name)
+{
+	$crons = _get_cron_array();
+
+	foreach ( array_keys($crons) as $timestamp )
+	{
+		unset($crons[$timestamp][$name]);
+
+		if ( empty($crons[$timestamp]) )
+			unset($crons[$timestamp]);
+	}
+
+	_set_cron_array( $crons );
+}
+#DEBUG
+
 imageShackCore::init();
 
-// Common functions and initialization
-abstract class imageShackCore 
+abstract class imageShackCore
 {
 	static $options;
 	const ver = '1.1';
@@ -43,7 +73,7 @@ abstract class imageShackCore
 	static function init()
 	{
 		// Load scbFramework
-#		require_once dirname(__FILE__) . '/scb/load.php';
+		require_once dirname(__FILE__) . '/scb/load.php';
 
 		self::$options = new scbOptions('imageshack-offloader', __FILE__, array(
 			'sizes' => array('full', 'large', 'medium', 'thumbnail'),
@@ -51,6 +81,9 @@ abstract class imageShackCore
 		));
 
 		imageShackOffloader::init();
+count_schedules(imageShackOffloader::hook);
+#really_clear_scheduled_hook(imageShackOffloader::hook);
+#imageShackOffloader::initial_offload();
 
 		if ( is_admin() )
 		{
@@ -72,15 +105,22 @@ abstract class imageShackCore
 
 abstract class imageShackOffloader
 {
+	private static $initial = false;
+	private static $cron;
+
 	const hook = 'imageShack_offload_single';
 
 	static function init()
 	{
-		add_action(self::hook, array(__CLASS__, 'do_job'), 10, 2);
+		add_action(self::hook, array(__CLASS__, 'do_job'), 10, 3);
 
 		add_action('add_attachment', array(__CLASS__, 'offload'));
 
-		register_activation_hook(__FILE__, array(__CLASS__, 'initial_offload'));
+		self::$cron = new scbCron(__FILE__, array(
+			'callback' => array(__CLASS__, 'initial_offload'),
+			'schedule' => 'hourly',
+		));
+
 		register_uninstall_hook(__FILE__, array(__CLASS__, 'uninstall'));
 	}
 
@@ -91,8 +131,12 @@ abstract class imageShackOffloader
 		$wpdb->query("DELETE FROM {$wpdb->postmeta}	" . imageShackCore::where_key);
 	}
 
+	// start offloading 100 attachments, with a slight delay.
+	// on the last attachment, set flag to start again
 	static function initial_offload()
 	{
+		self::$initial = true;
+
 		global $wpdb;
 
 		$ids = $wpdb->get_col("
@@ -103,41 +147,53 @@ abstract class imageShackOffloader
 				FROM {$wpdb->postmeta}
 			" . imageShackCore::where_key . "
 			)
+			LIMIT 1
 		");
 
 		if ( empty($ids) )
-			return;
+			return self::$cron->unschedule();
 
-		$i = 0;
-		foreach ( $ids as $id )
+		$count = count($ids);
+		for ($i = 0; $i < $count; $i++ )
 		{
-			self::offload($id, $i, false);
-			$i += 10;
+			if ( $i == $count - 1 )
+				$continue = true;
+
+			self::offload($ids[$i], $i * 5, $continue);
 		}
+
+		self::$initial = false;
 	}
 
-	static function offload($id, $delay = 0, $check_mime = true)
+	// Offload a single attachment, with all intermediate sizes
+	static function offload($id, $delay = -1, $continue = false)
 	{
-		if ( $check_mime && ! wp_attachment_is_image($id) )
+		if ( $delay < 0 && ! wp_attachment_is_image($id) )
 			return;
 
 		foreach ( imageShackCore::$options->sizes as $size )
-			self::add_job($id, $size, $delay);
+		{
+			$args = array($id, $size);
+
+			if ( $continue )
+			{
+				$args[] = true;
+				$continue = false;
+			}
+
+			wp_schedule_single_event( time() + $delay, self::hook, $args );
+		}
 	}
 
-	private static function add_job($id, $size, $delay = 0)
-	{
-		wp_schedule_single_event( time() + $delay, self::hook, array($id, $size) );
-	}
-
-	static function do_job($id, $size)
+	static function do_job($id, $size, $continue = false)
 	{
 		$old = self::get_current_url($id, $size);
 
-		if ( ! $new = self::get_new_url($old) )
-			return;
+		if ( $new = self::get_new_url($old) )
+			add_post_meta($id, $meta_key, $new, true);
 
-		add_post_meta($id, $meta_key, $new, true);
+#		if ( $continue )
+#			self::initial_offload();
 	}
 
 	private static function get_current_url($id, $size)
