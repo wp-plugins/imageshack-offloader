@@ -3,7 +3,7 @@ Contributors: scribu
 Donate link: http://scribu.net/wordpress
 Tags: cdn, images, imageshack
 Requires at least: 2.7
-Tested up to: 2.8
+Tested up to: 2.8.4
 Stable tag: 1.0.3
 
 Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
@@ -24,8 +24,6 @@ If an image can't be loaded from ImageShack, the plugin will roll back to the im
 * You can use the default WP interface for uploading images.
 * You have a backup of your images on your server.
 
-**PHP 5 is required.**
-
 == Installation ==
 
 You can either use the built-in WordPress plugin install menu, or do it the old-fashioned way:
@@ -39,6 +37,14 @@ You can either use the built-in WordPress plugin install menu, or do it the old-
 The plugin will automatically filter the post content and replace image src attributes with ImageShack URLs.
 
 If you want to get the URL for a specific image, you can use `get_imageshack_url($id, $size)`, where $id is the attachment id and $size is the desired size. Default is 'full'. If there is no URL yet, the function will return false.
+
+== Frequently Asked Questions ==
+
+= "Parse error: syntax error, unexpected T_CLASS..." Help! =
+
+Make sure your new host is running PHP 5. Add this line to wp-config.php:
+
+`var_dump(PHP_VERSION);`
 
 == Changelog ==
 
