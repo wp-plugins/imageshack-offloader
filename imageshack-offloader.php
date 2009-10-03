@@ -25,49 +25,22 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-
-#DEBUG
-scbCron::debug();
-
-function count_schedules($name)
-{
-	$crons = _get_cron_array();
-
-	foreach ( array_keys($crons) as $timestamp )
-		if ( isset($crons[$timestamp][$name]) )
-			$i++;
-
-	debug($i);
-}
-
-function really_clear_scheduled_hook($name)
-{
-	$crons = _get_cron_array();
-
-	foreach ( array_keys($crons) as $timestamp )
-	{
-		unset($crons[$timestamp][$name]);
-
-		if ( empty($crons[$timestamp]) )
-			unset($crons[$timestamp]);
-	}
-
-	_set_cron_array( $crons );
-}
-#DEBUG
-
 imageShackCore::init();
 
-abstract class imageShackCore
+
+// Common functions and initialization
+abstract class imageShackCore 
 {
 	static $options;
+	static $cron;
+
 	const ver = '1.1';
+
 	const where_posts = "
 		WHERE post_type = 'attachment'
 		AND post_status <> 'trash'
 		AND post_mime_type LIKE 'image%'
 	";
-
 	const where_key = "WHERE meta_key LIKE '!_imageshack!_%' ESCAPE '!'";
 
 	static function init()
@@ -75,154 +48,142 @@ abstract class imageShackCore
 		// Load scbFramework
 		require_once dirname(__FILE__) . '/scb/load.php';
 
+		// Load options
 		self::$options = new scbOptions('imageshack-offloader', __FILE__, array(
 			'sizes' => array('full', 'large', 'medium', 'thumbnail'),
+			'unattached' => true,
+			'order' => 'newest',
+			'use_transload' => true,
+			'interval' => 10,
 			'login' => '',
 		));
 
-		imageShackOffloader::init();
-count_schedules(imageShackOffloader::hook);
-#really_clear_scheduled_hook(imageShackOffloader::hook);
-#imageShackOffloader::initial_offload();
+		// Set up cron
+		$callback = array('imageShackOffloader', 'offload');
 
+		if ( self::$options->interval > 0 )
+			self::$cron = new scbCron(__FILE__, array(
+				'callback' => array('imageShackOffloader', 'offload'),
+				'interval' => self::$options->interval,
+			));
+		else
+			call_user_func($callback);
+
+		// Load settings page
 		if ( is_admin() )
 		{
 			require_once dirname(__FILE__) . '/admin.php';
-
 			new imageShackOffloaderAdmin(__FILE__, self::$options);
 			imageShackStats::init();
 		}
+		else
+			imageShackDisplay::init();
 
-		imageShackDisplay::init();
-#m		imageShackErrors::init();
+		imageShackErrors::init();
 	}
 
 	static function get_meta_key($size)
 	{
 		return '_imageshack_' . $size;
 	}
+
+	static function get_where_clause()
+	{
+		$where = self::where_posts;
+
+		if ( self::$options->unattached == FALSE )
+			$where .= "AND post_parent > 0";
+
+		return $where;
+	}
 }
 
-abstract class imageShackOffloader
+
+// Do the offloading
+abstract class imageShackOffloader 
 {
-	private static $initial = false;
-	private static $cron;
+	static $udir;
 
-	const hook = 'imageShack_offload_single';
-
-	static function init()
+	static function offload()
 	{
-		add_action(self::hook, array(__CLASS__, 'do_job'), 10, 3);
+		self::$udir = wp_upload_dir();	
 
-		add_action('add_attachment', array(__CLASS__, 'offload'));
+		$where = imageShackCore::get_where_clause();
 
-		self::$cron = new scbCron(__FILE__, array(
-			'callback' => array(__CLASS__, 'initial_offload'),
-			'schedule' => 'hourly',
-		));
+		switch (imageShackCore::$options->order)
+		{
+			case 'newest' :
+				$orderby = 'ORDER BY post_date DESC'; break;
+			case 'random' :
+				$orderby = 'ORDER BY RAND()'; break;
+			case 'oldest' :
+				$orderby = 'ORDER BY post_date ASC'; break;
+		}
 
-		register_uninstall_hook(__FILE__, array(__CLASS__, 'uninstall'));
+		$tmp_sizes = imageShackCore::$options->sizes;
+
+		shuffle($tmp_sizes);
+
+		do {
+			$size = array_pop($tmp_sizes);
+
+			if ( self::_offload($size, $where, $orderby) )
+				return;
+		} while ( ! empty($tmp_sizes) );
 	}
 
-	static function uninstall()
+	private static function _offload($size, $where, $orderby)
 	{
 		global $wpdb;
-		
-		$wpdb->query("DELETE FROM {$wpdb->postmeta}	" . imageShackCore::where_key);
-	}
 
-	// start offloading 100 attachments, with a slight delay.
-	// on the last attachment, set flag to start again
-	static function initial_offload()
-	{
-		self::$initial = true;
-
-		global $wpdb;
+		$meta_key = imageShackCore::get_meta_key($size);
 
 		$ids = $wpdb->get_col("
-			SELECT ID FROM {$wpdb->posts}
-			" . imageShackCore::where_posts . "
+			SELECT ID
+			FROM {$wpdb->posts}
+			{$where}
 			AND ID NOT IN (
 				SELECT post_id
 				FROM {$wpdb->postmeta}
-			" . imageShackCore::where_key . "
+				WHERE meta_key = '{$meta_key}'
 			)
-			LIMIT 1
+			{$orderby}
+			LIMIT 5
 		");
 
 		if ( empty($ids) )
-			return self::$cron->unschedule();
+			return false;
 
-		$count = count($ids);
-		for ($i = 0; $i < $count; $i++ )
+		foreach ( $ids as $id )
 		{
-			if ( $i == $count - 1 )
-				$continue = true;
+			if ( ! $url = self::parse_imageshack_url($id, $size) )
+				continue;
 
-			self::offload($ids[$i], $i * 5, $continue);
-		}
+			add_post_meta($id, $meta_key, $url, true);
 
-		self::$initial = false;
-	}
-
-	// Offload a single attachment, with all intermediate sizes
-	static function offload($id, $delay = -1, $continue = false)
-	{
-		if ( $delay < 0 && ! wp_attachment_is_image($id) )
-			return;
-
-		foreach ( imageShackCore::$options->sizes as $size )
-		{
-			$args = array($id, $size);
-
-			if ( $continue )
-			{
-				$args[] = true;
-				$continue = false;
-			}
-
-			wp_schedule_single_event( time() + $delay, self::hook, $args );
+			return true;	// exit after first successful upload to prevent throtling
 		}
 	}
 
-	static function do_job($id, $size, $continue = false)
+	private static function parse_imageshack_url($id, $size)
 	{
-		$old = self::get_current_url($id, $size);
-
-		if ( $new = self::get_new_url($old) )
-			add_post_meta($id, $meta_key, $new, true);
-
-#		if ( $continue )
-#			self::initial_offload();
-	}
-
-	private static function get_current_url($id, $size)
-	{
-		if ( ! $file = image_downsize($id, $size) )
-			return false;
-
-		return $file[0];
-	}
-
-	private static function get_new_url($url)
-	{
-		if ( empty($url) || FALSE !== strpos($url, 'imageshack.us') )
-			return false;
-
 		$args = array(
 			'xml' => 'yes',
 			'public' => 'no',
 			'rembar' => 'yes',
-			'url' => $url,
-			'cookie' => imageShackCore::$options->login
+			'cookie' => trim(imageShackCore::$options->login)
 		);
 
 		if ( empty($args['cookie']) )
 			unset($args['cookie']);
 
-		$response = wp_remote_post('http://www.imageshack.us/transload.php', array('body' => $args));
+		if ( !$file = self::get_file_url($id, $size) )
+			return false;
 
-		if ( ! $r = wp_remote_retrieve_body($response) )
+		$url = 'http://www.imageshack.us/transload.php';
+		$args['url'] = $file;
+
+		if ( ! $r = self::uploadToImageshack($url, $args) )
 			return false;
 
 		$r = explode('<image_link>', $r);
@@ -230,10 +191,25 @@ abstract class imageShackOffloader
 
 		return $r[0];
 	}
+
+	private static function uploadToImageshack($url, $args)
+	{
+		$response = wp_remote_post($url, array('body' => $args));
+
+		return wp_remote_retrieve_body($response);
+	}
+
+	private static function get_file_url($id, $size)
+	{
+		if ( ! $file = image_downsize($id, $size) )
+			return false;
+
+		return $file[0];
+	}
 }
 
 
-// Replace images on the front-end
+// Replace image URLs on the front-end
 abstract class imageShackDisplay
 {
 	static function init()
@@ -244,23 +220,28 @@ abstract class imageShackDisplay
 
 	static function the_content_filter($content)
 	{
-		$regex = '<img[^>]* size-(\w+) wp-image-(\d+)/';
+		$regex = '/href=["\'](.*?)["\'][^>]*><img [^>]* size-(\w+) wp-image-(\d+)/';
 		return preg_replace_callback($regex, array(__CLASS__, 'preg_callback'), $content);
 	}
 
 	static function preg_callback($match)
 	{
-		list ( $content, $size, $id ) = $match;
+		$size = $match[2];
+		$id = $match[3];
 
-		list ( $old ) = self::image_downsize_unfiltered($id, $size);
+		if ( ! $url = self::get_url($id, $size) )
+			return $match[0];
 
-		if ( ! $new = self::get_url($id, $size) || $new == $old )
-			return $content;
+		$old = $match[1];
+
+		// should never happen
+		if ( $url == $old )
+			return $match[0];
 
 		$old_url = array("src='{$old}'", "src=\"{$old}\"");
-		$new_url = array("src='{$new}'", "src=\"{$new}\"");
+		$new_url = array("src='{$url}'", "src=\"{$url}\"");
 
-		return str_replace($old_url, $new_url, $content);
+		return str_replace($old_url, $new_url, $match[0]);
 	}
 
 	static function image_downsize_filter($data, $id, $size)
@@ -271,18 +252,14 @@ abstract class imageShackDisplay
 			return $data;
 
 		if ( false === $data )
-			$data = self::image_downsize_unfiltered($id, $size);
+		{
+			// Hack so that we don't have to paste the whole function here
+			remove_filter('image_downsize', array(__CLASS__, 'image_downsize_filter'), 10, 3);
+			$data = image_downsize($id, $size);
+			add_filter('image_downsize', array(__CLASS__, 'image_downsize_filter'), 10, 3);
+		}
 
 		$data[0] = $url;
-
-		return $data;
-	}
-
-	private static function image_downsize_unfiltered($id, $size)
-	{
-		remove_filter('image_downsize', array(__CLASS__, 'image_downsize_filter'), 10, 3);
-		$data = image_downsize($id, $size);
-		add_filter('image_downsize', array(__CLASS__, 'image_downsize_filter'), 10, 3);
 
 		return $data;
 	}
@@ -340,7 +317,7 @@ abstract class imageShackErrors
 
 		echo (int) $wpdb->query("
 			DELETE FROM {$wpdb->postmeta}
-			WHERE meta_key LIKE '!_imageshack!_%' ESCAPE '!'
+			" . imageShackCore::where_key . "
 			AND meta_value IN ($urls)
 		");
 

@@ -18,9 +18,6 @@ class scbForms
 	*/
 	function input($args, $formdata = array())
 	{
-		$args = self::_validate_data($args);
-		$formdata = self::_validate_data($formdata);
-		
 		// Backwards compat
 		foreach ( array('name', 'value') as $key )
 		{
@@ -152,21 +149,6 @@ class scbForms
 
 // ____________PRIVATE METHODS____________
 
-	// Recursivly transform empty arrays to ''
-	private static function _validate_data($data)
-	{
-		if ( empty($data) )
-			return '';
-			
-		if ( ! is_array($data) )
-			return $data;
-
-		foreach ( $data as $key => &$value )
-			if ( is_array($value) )
-				$value = self::_validate_data($value);
-
-		return $data;
-	}
 
 	// From multiple inputs to single inputs
 	private static function _input($args, $formdata)
@@ -177,13 +159,6 @@ class scbForms
 			'desc' => NULL,
 			'checked' => NULL,
 		)), EXTR_SKIP);
-
-		// Correct name
-		if ( !is_array($name) && is_array($value)
-			&& $type == 'checkbox'
-			&& false === strpos($name, '[')
-		)
-			$args['name'] = $name = $name . '[]';
 
 		// Expand names or values
 		if ( !is_array($name) && !is_array($value) )
@@ -232,7 +207,6 @@ class scbForms
 				$cur_args['desc'] = $desc;
 
 			// Find relevant formdata
-			$match = NULL;
 			if ( $checked === NULL )
 			{
 				$match = @$formdata[str_replace('[]', '', $$i1)];
@@ -359,7 +333,7 @@ class scbForms
 			$opts = '';
 		else
 		{
-			$opts = "\t<option value=''";
+			$opts = "\t<option";
 			if ( $cur_val === array('foo') )
 				$opts .= " selected='selected'";
 			$opts .= ">{$text}</option>\n";
@@ -375,8 +349,6 @@ class scbForms
 				$cur_extra[] = "selected='selected'";
 
 			$cur_extra = implode(' ', $cur_extra);
-			if ( !empty($cur_extra) )
-				$cur_extra = ' ' . $cur_extra;
 
 			$opts .= "\t<option value='{$key}'{$cur_extra}>{$value}</option>\n";
 		}
@@ -427,12 +399,7 @@ class scbForms
 
 	private static function array_slice_assoc($array, $keys)
 	{
-		$r = array();
-		foreach ( $keys as $key )
-			if ( isset($array[$key]) )
-				$r[$key] = $array[$key];
-
-		return $r;			
+ 	   return array_intersect_key($array,array_flip($keys));
 	}
 
 	private static function debug() 
@@ -450,6 +417,14 @@ class scbForms
 		echo "</pre><br />";
 	}
 }
+
+// WP < 2.8
+if ( !function_exists('esc_html') ) :
+function esc_html($text)
+{
+	return wp_specialchars($text, ENT_QUOTES);
+}
+endif;
 
 // PHP < 5.2
 if ( !function_exists('array_fill_keys') ) :
