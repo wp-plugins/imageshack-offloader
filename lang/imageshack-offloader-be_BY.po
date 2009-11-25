@@ -1,0 +1,110 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: IO\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2009-04-27 20:36+0900\n"
+"PO-Revision-Date: 2009-09-20 21:29+0200\n"
+"Last-Translator: Fat Cow <zhr@tut.by>\n"
+"Language-Team: Fat Cow <iamm@tut.by>\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Poedit-KeywordsList: __;_e;_c\n"
+"X-Poedit-Basepath: ../\n"
+"X-Poedit-Language: Belarusian\n"
+"X-Poedit-Country: BELARUS\n"
+"X-Poedit-SourceCharset: utf-8\n"
+"X-Poedit-SearchPath-0: lightbox-gallery\n"
+
+#: admin.php:22
+msgid "full"
+msgstr "поўны"
+
+#: admin.php:23
+msgid "large"
+msgstr "доўгі"
+
+#: admin.php:24
+msgid "medium"
+msgstr "сярэдні"
+
+#: admin.php:25
+msgid "thumbnail"
+msgstr "эскіз"
+
+#: admin.php:48
+msgid "Upload images with these sizes:"
+msgstr "Загрузіць малюнкі з гэтым памерам:"
+
+#: admin.php:60
+msgid "Image sizes"
+msgstr "Памер малюнкаў"
+
+#: admin.php:64
+msgid "Unattached images"
+msgstr "Незамацаваныя малюнкі"
+
+#: admin.php:67
+msgid "Also upload unattached images."
+msgstr "Таксама загружаць незамацаваныя малюнкі."
+
+#: admin.php:72
+msgid "newest first"
+msgstr "найновыя адразу"
+
+#: admin.php:73
+msgid "random"
+msgstr "выпадковыя"
+
+#: admin.php:74
+msgid "oldest first"
+msgstr "адразу старэйшыя"
+
+#: admin.php:85
+msgid "Offload priority"
+msgstr "Offload-прыярытэт"
+
+#: admin.php:89
+msgid "Offload interval"
+msgstr "Offload-інтэрвал"
+
+#: admin.php:93
+msgid "Try to offload an image every %input% seconds. <br>If you set it to 0, images will be offloaded faster, but your site will be slower."
+msgstr "Паспрабуйце, каб разгрузіць малюнкі кожныя %input% секунд. <br>Калі вы ўсталюеце яе ў 0, малюнкі будуць выгружаны хутчэй, але ваш сайт будзе павольней."
+
+#: admin.php:98
+msgid "Registration code"
+msgstr "Код рэгістрацыі"
+
+#: admin.php:101
+msgid "To put offloaded images into an account, paste the registration code found on <a target=\"_blank\" href=\"http://profile.imageshack.us/registration/\">this page</a> on Imageshack, after logging in."
+msgstr "Каб пакласці выгружана малюнкі ў рахунку, уставіць код рэгістрацыі знайсці на <a target=\"_blank\" href=\"http://profile.imageshack.us/registration/\">this page</a> на Imageshack Пасля ўваходу ва ўліковы запіс"
+
+#: scb/AdminPage.php:103
+msgid "Settings <strong>saved</strong>."
+msgstr "Налады <strong>захаваны </strong>."
+
+#: scb/AdminPage.php:271
+msgid "Settings"
+msgstr "Налады"
+
+#. Plugin Name of an extension
+msgid "ImageShack Offloader"
+msgstr "ImageShack Offloader"
+
+#. Plugin URI of an extension
+msgid "http://scribu.net/wordpress/imageshack-offloader"
+msgstr "http://scribu.net/wordpress/imageshack-offloader"
+
+#. Description of an extension
+msgid "Offload your images to <a href=\"http://imageshack.us\">ImageShack</a> to save server resources."
+msgstr "Offload вашых малюнкаў у <a href=\"http://imageshack.us\">ImageShack</a> для захавання рэсурсаў сервера."
+
+#. Author of an extension
+msgid "scribu"
+msgstr "scribu"
+
+#. Author URI of an extension
+msgid "http://scribu.net/"
+msgstr "http://scribu.net/"
+
