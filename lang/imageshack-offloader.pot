@@ -6,9 +6,9 @@
 #, fuzzy
 msgid ""
 msgstr ""
-"Project-Id-Version: ImageShack Offloader 1.0.1\n"
+"Project-Id-Version: ImageShack Offloader 1.0.4b\n"
 "Report-Msgid-Bugs-To: http://wordpress.org/tag/imageshack-offloader\n"
-"POT-Creation-Date: 2009-06-19 02:50+0300\n"
+"POT-Creation-Date: 2009-12-31 01:36+0200\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -16,80 +16,88 @@ msgstr ""
 "Content-Type: text/plain; charset=CHARSET\n"
 "Content-Transfer-Encoding: 8bit\n"
 
-#: admin.php:22
+#: admin.php:16
 msgid "full"
 msgstr ""
 
-#: admin.php:23
+#: admin.php:17
 msgid "large"
 msgstr ""
 
-#: admin.php:24
+#: admin.php:18
 msgid "medium"
 msgstr ""
 
-#: admin.php:25
+#: admin.php:19
 msgid "thumbnail"
 msgstr ""
 
-#: admin.php:48
+#: admin.php:40
 msgid "Upload images with these sizes:"
 msgstr ""
 
-#: admin.php:60
+#: admin.php:51
 msgid "Image sizes"
 msgstr ""
 
-#: admin.php:64
+#: admin.php:55
 msgid "Unattached images"
 msgstr ""
 
-#: admin.php:67
+#: admin.php:58
 msgid "Also upload unattached images."
 msgstr ""
 
-#: admin.php:72
+#: admin.php:63
 msgid "newest first"
 msgstr ""
 
-#: admin.php:73
+#: admin.php:64
 msgid "random"
 msgstr ""
 
-#: admin.php:74
+#: admin.php:65
 msgid "oldest first"
 msgstr ""
 
-#: admin.php:85
+#: admin.php:76
 msgid "Offload priority"
 msgstr ""
 
-#: admin.php:89
+#: admin.php:80
 msgid "Offload interval"
 msgstr ""
 
-#: admin.php:93
+#: admin.php:84
 msgid ""
 "Try to offload an image every %input% seconds. <br>If you set it to 0, "
 "images will be offloaded faster, but your site will be slower."
 msgstr ""
 
-#: admin.php:98
+#: admin.php:89
 msgid "Registration code"
 msgstr ""
 
-#: admin.php:101
+#: admin.php:92
 msgid ""
 "To put offloaded images into an account, paste the registration code found "
 "on <a target=\"_blank\" href=\"http://profile.imageshack.us/registration/"
 "\">this page</a> on Imageshack, after logging in."
 msgstr ""
 
-#: scb/AdminPage.php:103
+#: admin.php:108
+msgid "Offloading status"
+msgstr ""
+
+#: scb/AdminPage.php:101
 msgid "Settings <strong>saved</strong>."
 msgstr ""
 
-#: scb/AdminPage.php:271
+#: scb/AdminPage.php:111
+msgid "Save Changes"
+msgstr ""
+
+#: scb/AdminPage.php:314
 msgid "Settings"
 msgstr ""
 

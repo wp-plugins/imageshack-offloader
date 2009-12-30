@@ -130,12 +130,14 @@ abstract class imageShackOffloader {
 
 		$ids = $wpdb->get_col("
 			SELECT ID
-			FROM {$wpdb->posts} {$where}
+			FROM {$wpdb->posts} 
+			{$where}
 			AND ID NOT IN (
 				SELECT post_id
 				FROM {$wpdb->postmeta}
 				WHERE meta_key = '{$meta_key}'
-			) {$orderby}
+			)
+			{$orderby}
 			LIMIT 5
 		");
 
