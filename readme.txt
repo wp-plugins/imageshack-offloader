@@ -3,7 +3,7 @@ Contributors: scribu
 Donate link: http://scribu.net/wordpress
 Tags: cdn, images, imageshack
 Requires at least: 2.8
-Tested up to: 2.9-rare
+Tested up to: 2.9
 Stable tag: 1.0.3
 
 Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
@@ -47,6 +47,9 @@ Make sure your new host is running PHP 5. Add this line to wp-config.php:
 `var_dump(PHP_VERSION);`
 
 == Changelog ==
+
+= 1.0.4 =
+* fix image replacement in post content
 
 = 1.0.3 =
 * added roll back mechanism for missing images

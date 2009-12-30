@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: ImageShack Offloader
-Version: 1.1a
+Version: 1.0.4b
 Description: Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 Author: scribu
 Author URI: http://scribu.net/
@@ -29,22 +29,16 @@ imageShackCore::init();
 
 
 // Common functions and initialization
-abstract class imageShackCore 
-{
+abstract class imageShackCore {
+
 	static $options;
 	static $cron;
 
-	const ver = '1.1';
+	const ver = '1.0.4';
 
-	const where_posts = "
-		WHERE post_type = 'attachment'
-		AND post_status <> 'trash'
-		AND post_mime_type LIKE 'image%'
-	";
 	const where_key = "WHERE meta_key LIKE '!_imageshack!_%' ESCAPE '!'";
 
-	static function init()
-	{
+	static function init() {
 		// Load scbFramework
 		require_once dirname(__FILE__) . '/scb/load.php';
 
@@ -70,8 +64,7 @@ abstract class imageShackCore
 			call_user_func($callback);
 
 		// Load settings page
-		if ( is_admin() )
-		{
+		if ( is_admin() ) {
 			require_once dirname(__FILE__) . '/admin.php';
 			new imageShackOffloaderAdmin(__FILE__, self::$options);
 			imageShackStats::init();
@@ -82,14 +75,15 @@ abstract class imageShackCore
 		imageShackErrors::init();
 	}
 
-	static function get_meta_key($size)
-	{
+	static function get_meta_key($size) {
 		return '_imageshack_' . $size;
 	}
 
-	static function get_where_clause()
-	{
-		$where = self::where_posts;
+	static function get_where_clause() {
+		$where = "
+			WHERE post_type = 'attachment'
+			AND post_mime_type LIKE 'image/%'
+		";
 
 		if ( self::$options->unattached == FALSE )
 			$where .= "AND post_parent > 0";
@@ -100,18 +94,15 @@ abstract class imageShackCore
 
 
 // Do the offloading
-abstract class imageShackOffloader 
-{
+abstract class imageShackOffloader {
 	static $udir;
 
-	static function offload()
-	{
+	static function offload() {
 		self::$udir = wp_upload_dir();	
 
 		$where = imageShackCore::get_where_clause();
 
-		switch (imageShackCore::$options->order)
-		{
+		switch (imageShackCore::$options->order) {
 			case 'newest' :
 				$orderby = 'ORDER BY post_date DESC'; break;
 			case 'random' :
@@ -132,30 +123,26 @@ abstract class imageShackOffloader
 		} while ( ! empty($tmp_sizes) );
 	}
 
-	private static function _offload($size, $where, $orderby)
-	{
+	private static function _offload($size, $where, $orderby) {
 		global $wpdb;
 
 		$meta_key = imageShackCore::get_meta_key($size);
 
 		$ids = $wpdb->get_col("
 			SELECT ID
-			FROM {$wpdb->posts}
-			{$where}
+			FROM {$wpdb->posts} {$where}
 			AND ID NOT IN (
 				SELECT post_id
 				FROM {$wpdb->postmeta}
 				WHERE meta_key = '{$meta_key}'
-			)
-			{$orderby}
+			) {$orderby}
 			LIMIT 5
 		");
 
 		if ( empty($ids) )
 			return false;
 
-		foreach ( $ids as $id )
-		{
+		foreach ( $ids as $id ) {
 			if ( ! $url = self::parse_imageshack_url($id, $size) )
 				continue;
 
@@ -165,8 +152,7 @@ abstract class imageShackOffloader
 		}
 	}
 
-	private static function parse_imageshack_url($id, $size)
-	{
+	private static function parse_imageshack_url($id, $size) {
 		$args = array(
 			'xml' => 'yes',
 			'public' => 'no',
@@ -192,15 +178,13 @@ abstract class imageShackOffloader
 		return $r[0];
 	}
 
-	private static function uploadToImageshack($url, $args)
-	{
+	private static function uploadToImageshack($url, $args) {
 		$response = wp_remote_post($url, array('body' => $args));
 
 		return wp_remote_retrieve_body($response);
 	}
 
-	private static function get_file_url($id, $size)
-	{
+	private static function get_file_url($id, $size) {
 		if ( ! $file = image_downsize($id, $size) )
 			return false;
 
@@ -210,49 +194,57 @@ abstract class imageShackOffloader
 
 
 // Replace image URLs on the front-end
-abstract class imageShackDisplay
-{
-	static function init()
-	{
+abstract class imageShackDisplay {
+	static function init() {
 		add_filter('image_downsize', array(__CLASS__, 'image_downsize_filter'), 10, 3);
 		add_filter('the_content', array(__CLASS__, 'the_content_filter'), 20);
 	}
 
-	static function the_content_filter($content)
-	{
-		$regex = '/href=["\'](.*?)["\'][^>]*><img [^>]* size-(\w+) wp-image-(\d+)/';
-		return preg_replace_callback($regex, array(__CLASS__, 'preg_callback'), $content);
+	static function the_content_filter($content) {
+		return preg_replace_callback('#<img\s+[^\<]*src=[\'"]?([^\'"]+)[^\<]*>#i',
+			array(__CLASS__, 'preg_callback'), $content);
 	}
 
-	static function preg_callback($match)
-	{
-		$size = $match[2];
-		$id = $match[3];
+	static function preg_callback($match) {
+		global $wpdb;
 
-		if ( ! $url = self::get_url($id, $size) )
-			return $match[0];
+		list ( $img, $old_url ) = $match;
 
-		$old = $match[1];
+		$file = basename($old_url);
 
-		// should never happen
-		if ( $url == $old )
-			return $match[0];
+		$like = like_escape($wpdb->escape($file));
 
-		$old_url = array("src='{$old}'", "src=\"{$old}\"");
-		$new_url = array("src='{$url}'", "src=\"{$url}\"");
+		list ( $id, $metadata ) = $wpdb->get_row("
+			SELECT post_id, meta_value
+			FROM $wpdb->postmeta
+			WHERE meta_key = '_wp_attachment_metadata'
+			AND meta_value LIKE '%\"$like\"%'
+			LIMIT 1
+		", ARRAY_N);
 
-		return str_replace($old_url, $new_url, $match[0]);
+		$metadata = maybe_unserialize($metadata);
+
+		// determine size
+		$size = 'full';
+		foreach ( $metadata['sizes'] as $size_n => $args )
+			if ( $args['file'] == $file ) {
+				$size = $size_n;
+				break;
+			}
+
+		if ( $new_url = self::get_url($id, $size) )
+			return str_replace($old_url, $new_url, $img);
+
+		return $img;
 	}
 
-	static function image_downsize_filter($data, $id, $size)
-	{
+	static function image_downsize_filter($data, $id, $size) {
 		$url = self::get_url($id, $size);
 
 		if ( ! $url )
 			return $data;
 
-		if ( false === $data )
-		{
+		if ( false === $data ) {
 			// Hack so that we don't have to paste the whole function here
 			remove_filter('image_downsize', array(__CLASS__, 'image_downsize_filter'), 10, 3);
 			$data = image_downsize($id, $size);
@@ -264,30 +256,25 @@ abstract class imageShackDisplay
 		return $data;
 	}
 
-	static function get_url($id, $size)
-	{
+	static function get_url($id, $size) {
 		return get_post_meta($id, imageShackCore::get_meta_key($size), true);
 	}
 }
 
-function get_imageshack_url($id, $size = 'full')
-{
+function get_imageshack_url($id, $size = 'full') {
 	return imageShackDisplay::get_url($id, $size);
 }
 
 
 // Un-offload images that can't be loaded from ImageShack
-abstract class imageShackErrors
-{
-	static function init()
-	{
+abstract class imageShackErrors {
+	static function init() {
 		add_action('template_redirect', array(__CLASS__, 'script'));
 		add_action('wp_ajax_imageshack-offloader', array(__CLASS__, 'ajax_response'));
 		add_action('wp_ajax_nopriv_imageshack-offloader', array(__CLASS__, 'ajax_response'));
 	}
 
-	static function script()
-	{
+	static function script() {
 		wp_enqueue_script('ishack-errors', plugin_dir_url(__FILE__) . 'inc/errors.js', array('jquery'), imageShackCore::ver, true);
 
 		wp_localize_script('ishack-errors', 'iShackL10n', array(
@@ -295,8 +282,7 @@ abstract class imageShackErrors
 		));
 	}
 
-	static function ajax_response()
-	{
+	static function ajax_response() {
 		global $wpdb;
 
 		$urls = array_unique($_POST['urls']);
@@ -304,8 +290,7 @@ abstract class imageShackErrors
 		if ( ! $urls )
 			return;
 
-		foreach ( $urls as $i => $url )
-		{
+		foreach ( $urls as $i => $url ) {
 			// see if the file is actually missing; wp_remote_head() gives "400 Bad Request"
 			if ( FALSE !== @file_get_contents($url) )
 				unset($urls[$i]);

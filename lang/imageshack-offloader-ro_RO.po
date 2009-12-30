@@ -2,7 +2,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Imageshack Offloader\n"
 "Report-Msgid-Bugs-To: http://wordpress.org/tag/imageshack-offloader\n"
-"POT-Creation-Date: 2009-10-03 11:39+0300\n"
+"POT-Creation-Date: 2009-05-07 17:55+0300\n"
 "PO-Revision-Date: \n"
 "Last-Translator: scribu <scribu@gmail.com>\n"
 "Language-Team: \n"
@@ -15,84 +15,75 @@ msgstr ""
 # This file is distributed under the same license as the PACKAGE package.
 # FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
 #
-#: admin.php:19
+#: admin.php:23
 msgid "full"
 msgstr "întreagă"
 
-#: admin.php:20
+#: admin.php:24
 msgid "large"
 msgstr "mare"
 
-#: admin.php:21
+#: admin.php:25
 msgid "medium"
 msgstr "medie"
 
-#: admin.php:22
+#: admin.php:26
 msgid "thumbnail"
 msgstr "miniatură"
 
-#: admin.php:50
-msgid "Upload images with these sizes"
-msgstr "Încarcă imagini cu următoarele mărimi"
+#: admin.php:65
+msgid "Upload images with these sizes:"
+msgstr "Încarcă imagini cu următoarele mărimi:"
 
-#: admin.php:62
+#: admin.php:76
 msgid "Image sizes"
 msgstr "Mărimea imaginilor"
 
-#: admin.php:66
+#: admin.php:80
 msgid "Unattached images"
 msgstr "Imagini neatașate"
 
-#: admin.php:69
+#: admin.php:83
 msgid "Also upload unattached images."
 msgstr "Încarcă și imaginile neatașate."
 
-#: admin.php:74
+#: admin.php:91
 msgid "newest first"
 msgstr "întâi cele mai noi"
 
-#: admin.php:75
+#: admin.php:98
 msgid "random"
 msgstr "aleatoare"
 
-#: admin.php:76
+#: admin.php:105
 msgid "oldest first"
 msgstr "întâi cele mai vechi"
 
-#: admin.php:86
-msgid "Offload priority"
-msgstr "Prioritate încărcare"
+#: admin.php:107
+msgid "Upload order"
+msgstr "Ordinea de încărcare"
 
-#: admin.php:90
-msgid "Offload interval"
+#: admin.php:111
+msgid "Upload interval"
 msgstr "Interval de încărcare"
 
-#: admin.php:94
-msgid "Try to offload an image every %input% seconds. <br>If you set it to 0, images will be offloaded faster, but your site will be slower."
-msgstr "Încearcă să încarci o imagine la fiecare %input% secunde. <br>Dacă pui 0, imaginile vor fi încărcate mai rapid, dar site-ul va merge mai greu."
+#: admin.php:116
+msgid "Try to upload an image every %input% seconds."
+msgstr "Încearcă să încarci o imagine o dată la fiecare %input% secunde."
 
-#: admin.php:99
+#: admin.php:121
 msgid "Registration code"
 msgstr "Codul de înregistrare"
 
-#: admin.php:102
-msgid "To put offloaded images into an account, paste the registration code found on <a target=\"_blank\" href=\"http://profile.imageshack.us/registration/\">this page</a> on Imageshack, after logging in."
-msgstr "Pentru a pune imaginile încărcate într-un cont, copiază codul de înregistrare găsit la <a target=\"_blank\" href=\"http://profile.imageshack.us/registration/\">această pagină</a> de pe Imageshack, după ce te loghezi."
+#: admin.php:124
+msgid "Paste the registration code found on <a target=\"_blank\" href=\"http://profile.imageshack.us/registration/\">this page</a> on Imageshack, after logging in."
+msgstr "Copiază codul de înregistrare găsit la <a target=\"_blank\" href=\"http://profile.imageshack.us/registration/\">această pagină</a> de pe Imageshack, după ce te loghezi."
 
-#: admin.php:106
-#: admin.php:123
-msgid "Offloading status"
-msgstr "Stare offloading"
-
-#: admin.php:146
-msgid "No images offloaded yet."
-msgstr "Nicio imagine nu a fost încărcată încă."
-
-#: scb/AdminPage.php:107
+#: scb/OptionsPage.php:163
 msgid "Settings <strong>saved</strong>."
 msgstr "Setări <strong>salvate</strong>."
 
-#: scb/AdminPage.php:275
+#: scb/OptionsPage.php:192
 msgid "Settings"
 msgstr "Setări"
 
@@ -115,9 +106,4 @@ msgstr "scribu"
 #. Author URI of an extension
 msgid "http://scribu.net/"
 msgstr "http://scribu.net/"
-
-#~ msgid "Upload order"
-#~ msgstr "Ordinea de încărcare"
-#~ msgid "Try to upload an image every %input% seconds."
-#~ msgstr "Încearcă să încarci o imagine o dată la fiecare %input% secunde."
 
