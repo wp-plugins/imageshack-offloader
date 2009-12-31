@@ -228,7 +228,7 @@ abstract class imageShackDisplay {
 
 		// determine size
 		$size = 'full';
-		foreach ( $metadata['sizes'] as $size_n => $args )
+		foreach ( (array) $metadata['sizes'] as $size_n => $args )
 			if ( $args['file'] == $file ) {
 				$size = $size_n;
 				break;
