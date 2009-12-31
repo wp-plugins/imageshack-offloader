@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: ImageShack Offloader
-Version: 1.0.4b
+Version: 1.0.4
 Description: Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 Author: scribu
 Author URI: http://scribu.net/
@@ -289,7 +289,7 @@ abstract class imageShackErrors {
 
 		$urls = array_unique($_POST['urls']);
 
-		if ( ! $urls )
+		if ( empty($urls) )
 			return;
 
 		foreach ( $urls as $i => $url ) {
