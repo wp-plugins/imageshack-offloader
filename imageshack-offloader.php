@@ -1,7 +1,7 @@
 <?php
 /*
 Plugin Name: ImageShack Offloader
-Version: 1.0.4
+Version: 1.0.5a
 Description: Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
 Author: scribu
 Author URI: http://scribu.net/
@@ -25,7 +25,10 @@ You should have received a copy of the GNU General Public License
 along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-imageShackCore::init();
+
+function get_imageshack_url($attachment_id, $size = 'full') {
+	return imageShackDisplay::get_url($attachment_id, $size);
+}
 
 
 // Common functions and initialization
@@ -91,7 +94,7 @@ abstract class imageShackCore {
 		return $where;
 	}
 }
-
+imageShackCore::init();
 
 // Do the offloading
 abstract class imageShackOffloader {
@@ -258,13 +261,9 @@ abstract class imageShackDisplay {
 		return $data;
 	}
 
-	static function get_url($id, $size) {
-		return get_post_meta($id, imageShackCore::get_meta_key($size), true);
+	static function get_url($attachment_id, $size) {
+		return get_post_meta($attachment_id, imageShackCore::get_meta_key($size), true);
 	}
-}
-
-function get_imageshack_url($id, $size = 'full') {
-	return imageShackDisplay::get_url($id, $size);
 }
 
 

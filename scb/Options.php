@@ -28,26 +28,27 @@ class scbOptions {
 			register_activation_hook($file, array($this, '_update_reset'));
 		}
 
-		register_uninstall_hook($file, array($this, '_delete'));
+		scbUtil::add_uninstall_hook($file, array($this, '_delete'));
 	}
 
 	/**
 	 * Get all data fields, certain fields or a single field
 	 *
-	 * @param string|array $field The field to get or an array of fields
+	 * @param string|array $field The field(s) to get
 	 * @return mixed Whatever is in those fields
 	 */
 	function get($field = '') {
-		if ( empty($field) )
-			return $this->data;
+		return $this->_get($field, $this->data);
+	}
 
-		if ( is_string($field) )
-			return $this->data[$field];
-
-		foreach ( $field as $key )
-			$result[] = $this->data[$key];
-
-		return $result;
+	/**
+	 * Get all default fields, certain fields or a single field
+	 *
+	 * @param string|array $field The field(s) to get
+	 * @return mixed Whatever is in those fields
+	 */
+	function get_defaults($field = '') {
+		return $this->_get($field, $this->defaults);
 	}
 
 	/**
@@ -64,6 +65,23 @@ class scbOptions {
 			$newdata = array($field => $value);
 
 		$this->update(array_merge($this->data, $newdata));
+	}
+
+	/**
+	 * Remove any keys that are not in the defaults array
+	 */
+	function cleanup() {
+		$r = array();
+
+		if ( ! is_array($this->defaults) )
+			return false;
+
+		foreach ( array_keys($this->defaults) as $key )
+			$r[$key] = $this->data[$key];
+
+		$this->update($r);
+
+		return true;
 	}
 
 	/**
@@ -94,6 +112,21 @@ class scbOptions {
 //_____INTERNAL METHODS_____
 
 
+	// Get one, more or all fields from an array
+	private function _get($field, $data) {
+		if ( empty($field) )
+			return $data;
+
+		if ( is_string($field) )
+			return $data[$field];
+
+		foreach ( $field as $key )
+			if ( isset($data[$key]) )
+				$result[] = $data[$key];
+
+		return $result;
+	}
+
 	// Magic method: $options->field
 	function __get($field) {
 		return $this->data[$field];
@@ -102,6 +135,11 @@ class scbOptions {
 	// Magic method: $options->field = $value
 	function __set($field, $value) {
 		$this->set($field, $value);
+	}
+
+	// Magic method: isset($options->field)
+	function __isset($field) {
+		return isset($this->data[$field]);
 	}
 
 	// Add new fields with their default values

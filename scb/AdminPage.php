@@ -5,15 +5,18 @@ Creates an admin page
 
 You must set $this->args and define the page_content() method
 */
+
 abstract class scbAdminPage {
 	/** Page args
-	 * string $parent  (default: options-general.php)
-	 * string $page_title  (mandatory)
-	 * string $menu_title
-	 * string $page_slug
-	 * string $capability (default: 'manage_options')
-	 * string $nonce
-	 * array $action_link  (default: 'Settings')
+	 * $toplevel string  If not empty, will create a new top level menu
+	 * $icon string  Path to an icon for the top level menu
+	 * $parent string  (default: options-general.php)
+	 * $capability string  (default: 'manage_options')
+	 * $page_title string  (mandatory)
+	 * $menu_title string  (default: $page_title)
+	 * $page_slug string  (default: sanitized $page_title)
+	 * $nonce string  (default: $page_slug)
+	 * $action_link string|bool  Text of the action link on the Plugins page (default: 'Settings')
 	 */
 	protected $args;
 
@@ -34,24 +37,62 @@ abstract class scbAdminPage {
 	// Formdata used for filling the form elements
 	protected $formdata = array();
 
+	// Registration component
+	private static $registered = array();
+
+	static function register($class, $file, $options = null) {
+		if ( isset(self::$registered[$class]) )
+			return false;
+
+		self::$registered[$class] = array($file, $options);
+
+		add_action('_admin_menu', array(__CLASS__, '_pages_init'));
+
+		return true;
+	}
+
+	static function replace($old_class, $new_class) {
+		if ( ! isset(self::$registered[$old_class]) )
+			return false;
+
+		self::$registered[$new_class] = self::$registered[$old_class];
+		unset(self::$registered[$old_class]);
+
+		return true;
+	}
+
+	static function remove($class) {
+		if ( ! isset(self::$registered[$class]) )
+			return false;
+
+		unset(self::$registered[$class]);
+
+		return true;
+	}
+
+	static function _pages_init() {
+		foreach ( self::$registered as $class => $args )
+			new $class($args[0], $args[1]);
+	}
 
 //  ____________MAIN METHODS____________
 
 
 	// Constructor
 	function __construct($file, $options = NULL) {
-		$this->setup();
-		$this->check_args();
-
-		$this->file = $file;
-		$this->plugin_url = plugin_dir_url($file);
-
 		if ( $options !== NULL ) {
 			$this->options = $options;
 			$this->formdata = $this->options->get();
 		}
 
+		$this->file = $file;
+		$this->plugin_url = plugin_dir_url($file);
+
+		$this->setup();
+		$this->check_args();
+
 		add_action('admin_menu', array($this, 'page_init'));
+		add_filter('contextual_help', array($this, '_contextual_help'), 10, 2);
 
 		if ( $this->args['action_link'] )
 			add_filter('plugin_action_links_' . plugin_basename($file), array($this, '_action_link'));
@@ -64,9 +105,14 @@ abstract class scbAdminPage {
 	// Both wp_enqueue_*() and inline code can be added
 	function page_head(){}
 
+	// This is where the contextual help goes
+	// @return string
+	function page_help(){}
+
 	// A generic page header
 	function page_header() {
 		echo "<div class='wrap'>\n";
+		screen_icon();
 		echo "<h2>" . $this->args['page_title'] . "</h2>\n";
 	}
 
@@ -91,14 +137,14 @@ abstract class scbAdminPage {
 		check_admin_referer($this->nonce);
 
 		foreach ( $this->formdata as $name => $value )
-			$new_data[$name] = $_POST[$name];
+			$new_data[$name] = @$_POST[$name];
 
 		$this->formdata = $this->validate($new_data, $this->formdata);
 
 		if ( isset($this->options) )
 			$this->options->update($this->formdata);
 
-		$this->admin_msg(__('Settings <strong>saved</strong>.', $this->textdomain));
+		$this->admin_msg();
 	}
 
 
@@ -107,10 +153,23 @@ abstract class scbAdminPage {
 
 	// Generates a form submit button
 	function submit_button($value = '', $action = 'action', $class = "button") {
-		if ( empty($value) )
-			$value = __('Save Changes', $this->textdomain);
+		if ( is_array($value) ) {
+			extract(wp_parse_args($value, array(
+				'value' => __('Save Changes', $this->textdomain),
+				'action' => 'action',
+				'class' => 'button',
+				'ajax' => true
+			)));
 
-		$args = array(
+			if ( ! $ajax )
+				$class .= ' no-ajax';
+		}
+		else {
+			if ( empty($value) )
+				$value = __('Save Changes', $this->textdomain);
+		}
+
+		$input_args = array(
 			'type' => 'submit',
 			'names' => $action,
 			'values' => $value,
@@ -119,21 +178,31 @@ abstract class scbAdminPage {
 		);
 
 		if ( ! empty($class) )
-			$args['extra'] = "class='{$class}'";
+			$input_args['extra'] = "class='{$class}'";
 
-		$output = "<p class='submit'>\n" . scbForms::input($args) . "</p>\n";
+		$output = "<p class='submit'>\n" . scbForms::input($input_args) . "</p>\n";
 
 		return $output;
 	}
 
 	/*
 	Mimics scbForms::form_wrap()
+
 	$this->form_wrap($content);	// generates a form with a default submit button
+
 	$this->form_wrap($content, false); // generates a form with no submit button
-	$this->form_wrap($content, $text = 'Save changes', $name = 'action', $class = 'button');	// the last 3 arguments are sent to submit_button()
+
+	// the second argument is sent to submit_button()
+	$this->form_wrap($content, array(
+		'text' => 'Save changes', 
+		'name' => 'action', 
+		'ajax' => true,
+	));
 	*/
 	function form_wrap($content, $submit_button = true) {
-		if ( true === $submit_button ) {
+		if ( is_array($submit_button) ) {
+			$content .= call_user_func(array($this, 'submit_button'), $submit_button);
+		} elseif ( true === $submit_button ) {
 			$content .= $this->submit_button();
 		} elseif ( false !== strpos($submit_button, '<input') ) {
 			$content .= $submit_button;
@@ -198,7 +267,10 @@ abstract class scbAdminPage {
 	}
 
 	// Generates a standard admin notice
-	function admin_msg($msg, $class = "updated") {
+	function admin_msg($msg = '', $class = "updated") {
+		if ( empty($msg) )
+			$msg = __('Settings <strong>saved</strong>.', $this->textdomain);
+
 		echo "<div class='$class fade'><p>$msg</p></div>\n";
 	}
 
@@ -224,15 +296,55 @@ abstract class scbAdminPage {
 	function page_init() {
 		extract($this->args);
 
-		$this->pagehook = add_submenu_page($parent, $page_title, $menu_title, $capability, $page_slug, array($this, '_page_content_hook'));
+		if ( ! $toplevel ) {
+			$this->pagehook = add_submenu_page($parent, $page_title, $menu_title, $capability, $page_slug, array($this, '_page_content_hook'));
+		} else {
+			$func = 'add_' . $toplevel . '_page';
+			$this->pagehook = $func($page_title, $menu_title, $capability, $page_slug, array($this, '_page_content_hook'), $icon_url);
+		}
 
 		if ( ! $this->pagehook )
 			return;
 
-		$this->ajax_response();
+		if ( $ajax_submit ) {
+			$this->ajax_response();
+			add_action('admin_footer', array($this, 'ajax_submit'), 20);
+		}
 
-		add_action('admin_footer', array($this, 'ajax_submit'), 20);
 		add_action('admin_print_styles-' . $this->pagehook, array($this, 'page_head'));
+	}
+
+	private function check_args() {
+		if ( empty($this->args['page_title']) )
+			trigger_error('Page title cannot be empty', E_USER_WARNING);
+
+		$this->args = wp_parse_args($this->args, array(
+			'toplevel' => '',
+			'icon' => '',
+			'parent' => 'options-general.php',
+			'capability' => 'manage_options',
+			'menu_title' => $this->args['page_title'],
+			'page_slug' => '',
+			'nonce' => '',
+			'action_link' => __('Settings', $this->textdomain),
+			'ajax_submit' => false,
+		));
+
+		if ( empty($this->args['page_slug']) )
+			$this->args['page_slug'] = sanitize_title_with_dashes($this->args['menu_title']);
+
+		if ( empty($this->args['nonce']) )
+			$this->nonce = $this->args['page_slug'];
+	}
+
+	function _contextual_help($help, $screen) {
+		if ( is_object($screen) )
+			$screen = $screen->id;
+
+		if ( $screen == $this->pagehook && $actual_help = $this->page_help() )
+			return $actual_help;
+
+		return $help;
 	}
 
 	function ajax_response() {
@@ -286,7 +398,6 @@ jQuery(document).ready(function($){
 });
 </script>
 <?php
-		$this->page_head();
 	}
 
 	function _page_content_hook() {
@@ -302,26 +413,6 @@ jQuery(document).ready(function($){
 		$links[] = "<a href='$url'>" . $this->args['action_link'] . "</a>";
 
 		return $links;
-	}
-
-	private function check_args() {
-		if ( empty($this->args['page_title']) )
-			trigger_error('Page title cannot be empty', E_USER_ERROR);
-
-		$this->args = wp_parse_args($this->args, array(
-			'menu_title' => $this->args['page_title'],
-			'page_slug' => '',
-			'action_link' => __('Settings', $this->textdomain),
-			'parent' => 'options-general.php',
-			'capability' => 'manage_options',
-			'nonce' => ''
-		));
-
-		if ( empty($this->args['page_slug']) )
-			$this->args['page_slug'] = sanitize_title_with_dashes($this->args['menu_title']);
-
-		if ( empty($this->args['nonce']) )
-			$this->nonce = $this->args['page_slug'];
 	}
 }
 

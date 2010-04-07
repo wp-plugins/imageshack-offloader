@@ -1,10 +1,10 @@
 <?php
 
 class imageShackOffloaderAdmin extends scbAdminPage {
+
 	function setup() {
 		// Load translations
-		$plugin_dir = basename(dirname($file));
-		load_plugin_textdomain('imageshack-offloader', "wp-content/plugins/$plugin_dir/lang", "$plugin_dir/lang");
+		load_plugin_textdomain('imageshack-offloader', '', basename(dirname(__FILE__)) . '/lang');
 
 		$this->args = array(
 			'page_title' => 'ImageShack Offloader',
@@ -99,6 +99,7 @@ class imageShackOffloaderAdmin extends scbAdminPage {
 
 
 abstract class imageShackStats {
+
 	static function init() {
 		add_action('wp_dashboard_setup', array(__CLASS__, 'add_box'));
 	}
