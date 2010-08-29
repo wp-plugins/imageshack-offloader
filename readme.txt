@@ -1,6 +1,6 @@
 === ImageShack Offloader ===
 Contributors: scribu
-Donate link: http://scribu.net/wordpress
+Donate link: http://scribu.net/paypal
 Tags: cdn, images, imageshack
 Requires at least: 2.8
 Tested up to: 3.0
@@ -17,6 +17,8 @@ Displaying a lot of images on your site is great. You'll notice, however, that t
 You could start uploading the images manually and modify each post, or you can just install this plugin and be done with it. It will take care of sending copies of all your current (and future) attachments to ImageShack. It will also dynamically replace the URLs when the images are to be displayed.
 
 This way, if you decide you don't want to use ImageShack anymore, you can disable the plugin and everything goes back to how it was.
+
+Links: [Plugin News](http://scribu.net/wordpress/imageshack-offloader) | [Author's Site](http://scribu.net)
 
 == Installation ==
 
