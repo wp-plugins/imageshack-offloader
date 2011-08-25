@@ -42,6 +42,12 @@ Make sure your new host is running PHP 5. Add this line to wp-config.php:
 
 `var_dump(PHP_VERSION);`
 
+== Translations ==
+
+* Belorussian - [FatCow](http://www.fatcow.com/)
+* Bulgarian - [Web Geek](http://webhostinggeeks.com/)
+* Romanian - [scribu](http://scribu.net)
+
 == Changelog ==
 
 = 1.0.4 =
