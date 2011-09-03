@@ -2,8 +2,8 @@
 Contributors: scribu
 Donate link: http://scribu.net/paypal
 Tags: cdn, images, imageshack
-Requires at least: 2.8
-Tested up to: 2.9
+Requires at least: 1.0
+Tested up to: 1.0
 Stable tag: 1.0.4
 
 Offload your images to <a href="http://imageshack.us">ImageShack</a> to save server resources.
