@@ -1,3 +1,2 @@
 === ImageShack Offloader ===
-
-Removed.
+Stable tag: 1.0.4
