@@ -18,8 +18,6 @@ You could start uploading the images manually and modify each post, or you can j
 
 This way, if you decide you don't want to use ImageShack anymore, you can disable the plugin and everything goes back to how it was.
 
-Links: [Plugin News](http://scribu.net/wordpress/imageshack-offloader) | [Author's Site](http://scribu.net)
-
 == Installation ==
 
 You can either use the built-in WordPress plugin install menu, or do it the old-fashioned way:
@@ -41,12 +39,6 @@ If you want to get the URL for a specific image, you can use `get_imageshack_url
 Make sure your new host is running PHP 5. Add this line to wp-config.php:
 
 `var_dump(PHP_VERSION);`
-
-== Translations ==
-
-* Belorussian - [FatCow](http://www.fatcow.com/)
-* Bulgarian - [Web Geek](http://webhostinggeeks.com/)
-* Romanian - [scribu](http://scribu.net)
 
 == Changelog ==
 
