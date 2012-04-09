@@ -56,9 +56,7 @@ Make sure your new host is running PHP 5. Add this line to wp-config.php:
 
 = 1.0 =
 * use transloading instead of uploading
-* [more info](http://scribu.net/wordpress/imageshack-offloader/io-1-0.html)
 
 = 0.9 =
 * initial release
-* [more info](http://scribu.net/wordpress/imageshack-offloader/io-0-9.html)
 
